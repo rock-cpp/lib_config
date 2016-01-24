@@ -12,6 +12,7 @@ public:
     void printNode(const YAML::Node &node, int level = 0);
 
     std::shared_ptr<ConfigValue> getConfigValue(const YAML::Node &node);
+    std::shared_ptr<ConfigValue> getConfigValue(const std::string &ymlString);
     std::shared_ptr<ComplexConfigValue> getMap(const YAML::Node &map);
 
     bool insetMapIntoArray(const YAML::Node &map, ArrayConfigValue &array);

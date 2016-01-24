@@ -144,6 +144,13 @@ std::shared_ptr<ConfigValue> YAMLConfigParser::getConfigValue(const YAML::Node &
     return nullptr;
 }
 
+std::shared_ptr< ConfigValue > YAMLConfigParser::getConfigValue(const std::string& ymlString)
+{
+    YAML::Node doc = YAML::Load(ymlString);
+
+    return getConfigValue(doc);
+}
+
 std::shared_ptr<ComplexConfigValue> YAMLConfigParser::getMap(const YAML::Node &map)
 {
     std::shared_ptr<ComplexConfigValue> mapValue = std::make_shared<ComplexConfigValue>();
