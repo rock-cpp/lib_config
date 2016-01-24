@@ -31,7 +31,6 @@ protected:
     enum Type type;
     std::string name;
     ConfigValue(enum Type);
-    std::ostream val();
 };
 
 class SimpleConfigValue : public ConfigValue
