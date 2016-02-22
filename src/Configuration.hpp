@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include <memory>
+#include <iostream>
 
 namespace libConfig
 {
@@ -24,7 +25,7 @@ public:
     
     void setName(const std::string &name);
     
-    virtual void print(int level = 0) const = 0;
+    virtual void print(std::ostream &stream, int level = 0) const = 0;
 
     virtual ~ConfigValue();    
 protected:
@@ -38,7 +39,7 @@ class SimpleConfigValue : public ConfigValue
 public:
     SimpleConfigValue(const std::string &value);
     virtual ~SimpleConfigValue();
-    virtual void print(int level = 0) const;
+    virtual void print(std::ostream &stream, int level = 0) const;
     virtual bool merge(std::shared_ptr<ConfigValue> other);
     
     const std::string &getValue() const;
@@ -51,7 +52,7 @@ class ComplexConfigValue : public ConfigValue
 public:
     ComplexConfigValue();
     virtual ~ComplexConfigValue();
-    virtual void print(int level = 0) const;
+    virtual void print(std::ostream &stream, int level = 0) const;
     virtual bool merge(std::shared_ptr<ConfigValue> other);
     const std::map<std::string, std::shared_ptr<ConfigValue>> &getValues() const;
     void addValue(const std::string &name, std::shared_ptr<ConfigValue> value);
@@ -64,7 +65,7 @@ class ArrayConfigValue : public ConfigValue
 public:
     ArrayConfigValue();
     virtual ~ArrayConfigValue();
-    virtual void print(int level = 0) const;
+    virtual void print(std::ostream &stream, int level = 0) const;
     virtual bool merge(std::shared_ptr<ConfigValue> other);
     const std::vector<std::shared_ptr<ConfigValue> > getValues() const;
     void addValue(std::shared_ptr<ConfigValue> value);
@@ -78,7 +79,7 @@ public:
     Configuration(const std::string &name);
     ~Configuration();
     
-    void print() const;
+    void print(std::ostream &stream = std::cout) const;
     bool fillFromYaml(const std::string &yml);
     bool merge(const Configuration &other);
     
@@ -89,5 +90,7 @@ private:
     std::string name;
     std::map<std::string, std::shared_ptr<ConfigValue> > values;
 };
+
+std::ostream& operator <<(std::ostream& stream, const Configuration &conf);
 
 }

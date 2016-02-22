@@ -1,5 +1,5 @@
 #include "Configuration.hpp"
-
+#include "YAMLConfiguration.hpp"
 #include <iostream>
 
 using namespace libConfig;
@@ -14,15 +14,15 @@ ComplexConfigValue::~ComplexConfigValue()
 }
 
 
-void ComplexConfigValue::print(int level) const
+void ComplexConfigValue::print(std::ostream& stream, int level) const
 {
     for(int i = 0; i < level; i++)
-        std::cout << "  ";
+        stream << "  ";
     
-    std::cout << getName() << ":" << std::endl;
+    stream << getName() << ":" << std::endl;
     for(const auto &it : values)
     {
-        it.second->print(level + 1);
+        it.second->print(stream, level + 1);
     }
 }
 
@@ -85,15 +85,15 @@ const std::vector<std::shared_ptr<ConfigValue> > ArrayConfigValue::getValues() c
     return values;
 }
 
-void ArrayConfigValue::print(int level) const
+void ArrayConfigValue::print(std::ostream &stream, int level) const
 {
     for(int i = 0; i < level; i++)
-        std::cout << "  ";
+        stream << "  ";
 
-    std::cout << name << ":" << std::endl;
+    stream << name << ":" << std::endl;
     for(const std::shared_ptr<ConfigValue> &v : values)
     {
-        v->print(level + 1);
+        v->print(stream, level + 1);
     }
 }
 
@@ -141,11 +141,11 @@ const std::string& SimpleConfigValue::getValue() const
     return value;
 }
 
-void SimpleConfigValue::print(int level) const
+void SimpleConfigValue::print(std::ostream &stream, int level) const
 {
     for(int i = 0; i < level; i++)
-        std::cout << "  ";
-    std::cout << name << " : " << value << std::endl;
+        stream << "  ";
+    stream << name << " : " << value << std::endl;
 }
 
 bool SimpleConfigValue::merge(const std::shared_ptr< ConfigValue > other)
@@ -189,12 +189,19 @@ void ConfigValue::setName(const std::string& newName)
     name = newName;
 }
 
-void Configuration::print() const
+std::ostream& libConfig::operator<<(std::ostream& stream, const Configuration& conf)
 {
-    std::cout << "Configuration name is : " << name << std::endl;
+    conf.print(stream);
+    
+    return stream;
+}
+
+void Configuration::print(std::ostream &stream) const
+{
+    stream << "Configuration name is : " << name << std::endl;
     for(std::map<std::string, std::shared_ptr<ConfigValue> >::const_iterator it = values.begin(); it != values.end(); it++)
     {
-        it->second->print(1);
+        it->second->print(stream, 1);
     }
 }
 
