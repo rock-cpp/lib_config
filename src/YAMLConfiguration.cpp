@@ -106,7 +106,11 @@ std::shared_ptr<ConfigValue> YAMLConfigParser::getConfigValue(const YAML::Node &
         case YAML::NodeType::Scalar:
         {
             std::shared_ptr<ConfigValue> conf;
-            conf.reset(new SimpleConfigValue(node.as<std::string>()));
+    	    std::string s =node.as<std::string>();
+	        if(s.compare(".nan")==0) {
+	            s="nan";
+	        }
+            conf.reset(new SimpleConfigValue(s));
             return conf;
         }
             break;
