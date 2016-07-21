@@ -189,6 +189,16 @@ void ConfigValue::setName(const std::string& newName)
     name = newName;
 }
 
+void ConfigValue::setCxxTypeName(const std::string& name)
+{
+    cxxTypeName = name;
+}
+
+const std::string& ConfigValue::getCxxTypeName()
+{
+    return cxxTypeName;
+}
+
 std::ostream& libConfig::operator<<(std::ostream& stream, const Configuration& conf)
 {
     conf.print(stream);

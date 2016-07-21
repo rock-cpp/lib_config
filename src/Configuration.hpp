@@ -24,6 +24,8 @@ public:
     const Type &getType() const;
     
     void setName(const std::string &name);
+    void setCxxTypeName(const std::string &name);
+    const std::string &getCxxTypeName();
     
     virtual void print(std::ostream &stream, int level = 0) const = 0;
 
@@ -31,6 +33,8 @@ public:
 protected:
     enum Type type;
     std::string name;
+    //C++ type representation name
+    std::string cxxTypeName;
     ConfigValue(enum Type);
 };
 
