@@ -9,6 +9,7 @@ class TypelibConfiguration
     std::shared_ptr< libConfig::ConfigValue > getFromArray(Typelib::Value& value);
     std::shared_ptr< libConfig::ConfigValue > getFromEnum(Typelib::Value& value);
     std::shared_ptr< libConfig::ConfigValue > getFromCompound(Typelib::Value& value);
+    std::shared_ptr< libConfig::ConfigValue > getFromContainer(Typelib::Value& value);
     std::shared_ptr< libConfig::ConfigValue > getFromNumeric(Typelib::Value& value);
 
 public:

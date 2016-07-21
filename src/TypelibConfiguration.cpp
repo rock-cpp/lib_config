@@ -17,6 +17,7 @@ std::shared_ptr< ConfigValue > TypelibConfiguration::getFromValue(Typelib::Value
             return getFromCompound(value);
             break;
         case Typelib::Type::Container:
+            return getFromContainer(value);
             break;
         case Typelib::Type::Enum:
             return getFromEnum(value);
@@ -52,7 +53,6 @@ std::shared_ptr< ConfigValue > TypelibConfiguration::getFromNumeric(Typelib::Val
 {
     const Typelib::Numeric &numeric(static_cast<const Typelib::Numeric &>(value.getType()));
     
-    std::string name;
     std::string valueS;
     
     switch(numeric.getNumericCategory())
@@ -60,12 +60,10 @@ std::shared_ptr< ConfigValue > TypelibConfiguration::getFromNumeric(Typelib::Val
         case Typelib::Numeric::Float:
             if(numeric.getSize() == sizeof(float))
             {
-                name = "float";
                 valueS = getValue<float>(value);               
             }
             else
             {
-                name = "double";
                 valueS = getValue<double>(value);               
             }
             break;
@@ -73,19 +71,15 @@ std::shared_ptr< ConfigValue > TypelibConfiguration::getFromNumeric(Typelib::Val
             switch(numeric.getSize())
             {
                 case sizeof(int8_t):
-                    name = "int8_t";
                     valueS = getValue<int8_t>(value);               
                     break;
                 case sizeof(int16_t):
-                    name = "int16_t";
                     valueS = getValue<int16_t>(value);               
                     break;
                 case sizeof(int32_t):
-                    name = "int32_t";
                     valueS = getValue<int32_t>(value);               
                     break;
                 case sizeof(int64_t):
-                    name = "int64_t";
                     valueS = getValue<int64_t>(value);               
                     break;
                 default:
@@ -99,19 +93,15 @@ std::shared_ptr< ConfigValue > TypelibConfiguration::getFromNumeric(Typelib::Val
             switch(numeric.getSize())
             {
                 case sizeof(uint8_t):
-                    name = "uint8_t";
                     valueS = getValue<uint8_t>(value);               
                     break;
                 case sizeof(uint16_t):
-                    name = "uint16_t";
                     valueS = getValue<uint16_t>(value);               
                     break;
                 case sizeof(uint32_t):
-                    name = "uint32_t";
                     valueS = getValue<uint32_t>(value);               
                     break;
                 case sizeof(uint64_t):
-                    name = "uint64_t";
                     valueS = getValue<uint64_t>(value);               
                     break;
                 default:
@@ -128,16 +118,42 @@ std::shared_ptr< ConfigValue > TypelibConfiguration::getFromNumeric(Typelib::Val
     
     std::shared_ptr<SimpleConfigValue> config(new SimpleConfigValue(valueS));
     
-    config->setName(name);
+    config->setCxxTypeName(numeric.getName());
 
     return config;
+}
+
+std::shared_ptr< ConfigValue > TypelibConfiguration::getFromContainer(Typelib::Value& value)
+{
+    const Typelib::Container &cont = static_cast<const Typelib::Container &>(value.getType());
+    const size_t size = cont.getElementCount(value.getData());
+    
+    if(cont.kind() == "/std/string")
+    {
+        const std::string *content = static_cast<const std::string *>(value.getData());
+
+        std::shared_ptr<SimpleConfigValue> config(new SimpleConfigValue(*content));
+        config->setCxxTypeName(value.getType().getName());
+        return config;
+    }
+    
+    //std::vector
+    std::shared_ptr<ArrayConfigValue> array(new ArrayConfigValue());
+    array->setCxxTypeName(value.getType().getName());
+    for(size_t i = 0; i < size; i++)
+    {
+        Typelib::Value elem = cont.getElement(value.getData(), i);
+        array->addValue(getFromValue(elem));
+    }
+
+    return array;
 }
 
 std::shared_ptr< ConfigValue > TypelibConfiguration::getFromCompound(Typelib::Value& value)
 {
     std::shared_ptr<ComplexConfigValue> config(new ComplexConfigValue());
     
-    config->setName(value.getType().getName());
+    config->setCxxTypeName(value.getType().getName());
     
     const Typelib::Compound &comp = static_cast<const Typelib::Compound &>(value.getType());
      
@@ -146,7 +162,9 @@ std::shared_ptr< ConfigValue > TypelibConfiguration::getFromCompound(Typelib::Va
     for(const Typelib::Field &field: comp.getFields())
     {
         Typelib::Value fieldV(data + field.getOffset(), field.getType());
-        config->addValue(field.getName(), getFromValue(fieldV));
+        std::shared_ptr< ConfigValue > convV = getFromValue(fieldV);
+        convV->setName(field.getName());
+        config->addValue(field.getName(), convV);
     }
     
     return config;
@@ -157,6 +175,7 @@ std::shared_ptr< ConfigValue > TypelibConfiguration::getFromArray(Typelib::Value
     std::shared_ptr<ArrayConfigValue> config(new ArrayConfigValue());
 
     const Typelib::Array &array = static_cast<const Typelib::Array &>(value.getType());
+    config->setCxxTypeName(array.getName());
     
     void *data = value.getData();
     
@@ -178,7 +197,7 @@ std::shared_ptr< ConfigValue > TypelibConfiguration::getFromEnum(Typelib::Value&
     Typelib::Enum::integral_type *intVal = (static_cast<Typelib::Enum::integral_type *>(value.getData()));
     
     std::shared_ptr<SimpleConfigValue> config(new SimpleConfigValue(enumT.get(*intVal)));
-    config->setName(enumT.getName());
+    config->setCxxTypeName(enumT.getName());
     
     return config;
 }
