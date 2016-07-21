@@ -4,13 +4,16 @@ rock_library(lib_config
         Bundle.cpp
         Configuration.cpp
         YAMLConfiguration.cpp
+        TypelibConfiguration.cpp
     HEADERS
         Bundle.hpp
         Configuration.hpp
         YAMLConfiguration.hpp
+        TypelibConfiguration.hpp
     DEPS_PKGCONFIG
         base-types
         yaml-cpp
+        typelib
     DEPS_PLAIN 
         Boost_SYSTEM Boost_FILESYSTEM Boost_REGEX
     )
