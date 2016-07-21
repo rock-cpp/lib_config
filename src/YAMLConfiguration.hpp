@@ -6,6 +6,7 @@
 namespace libConfig
 {
 class YAMLConfigParser {
+    bool parseAndInsert(const std::string& configName, const std::string& ymlString, const std::string &pathStr, std::map< std::string, Configuration >& subConfigs);
 public:
     void displayMap(const YAML::Node &map, int level = 0);
 

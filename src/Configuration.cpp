@@ -243,7 +243,18 @@ bool Configuration::fillFromYaml(const std::string& yml)
 {
     values.clear();
     YAMLConfigParser parser;
-    return parser.parseYAML(*this, parser.applyStringVariableInsertions(yml));
+    std::string afterInsertion = parser.applyStringVariableInsertions(yml);
+    bool ret = false;
+    
+    try {
+    ret = parser.parseYAML(*this, afterInsertion);
+    }
+    catch (...)
+    {}
+    
+    if(!ret)
+        std::cout << "Modified YML is " << std::endl << afterInsertion << std::endl;
+    return ret;
 }
 
 bool Configuration::merge(const Configuration& other)
