@@ -20,32 +20,50 @@ Bundle::Bundle()
     }
     activeBundle = activeBundleC;
 
-    const char *pathsC = getenv("ROCK_BUNDLE_PATH");
-    if(!pathsC)
+    if(boost::filesystem::exists(activeBundle))
     {
-        throw std::runtime_error("Internal Error, no bundle path found.");
-    }
-    std::string paths = pathsC;
-    
-    boost::char_separator<char> sep(":");
-    boost::tokenizer<boost::char_separator<char> > tokens(paths, sep);
-
-    for(const std::string &path : tokens)
-    {
-        bundlePaths.push_back(path);
+        //new style, ROCK_BUNDLE contains full path
+        activeBundlePath = activeBundle;
         
-        std::string candidate = path + "/" + activeBundle;
+        boost::char_separator<char> sep("/");
+        boost::tokenizer<boost::char_separator<char> > tokens(activeBundle, sep);
         
-        if(boost::filesystem::exists(candidate))
+        //a bit inefective, but ok for this use case
+        for(const std::string &token : tokens)
         {
-            activeBundlePath = candidate;
-        }
+            activeBundle = token;
+        }        
     }
-    
-    if(activeBundlePath.empty())
+    else
     {
-        std::cout << pathsC << " active bundle " << activeBundleC << std::endl; 
-        throw std::runtime_error("Error, could not determine bundle path");
+        //old style, we need to build the path our own
+        const char *pathsC = getenv("ROCK_BUNDLE_PATH");
+        if(!pathsC)
+        {
+            throw std::runtime_error("Internal Error, no bundle path found.");
+        }
+        std::string paths = pathsC;
+        
+        boost::char_separator<char> sep(":");
+        boost::tokenizer<boost::char_separator<char> > tokens(paths, sep);
+
+        for(const std::string &path : tokens)
+        {
+            bundlePaths.push_back(path);
+            
+            std::string candidate = path + "/" + activeBundle;
+            
+            if(boost::filesystem::exists(candidate))
+            {
+                activeBundlePath = candidate;
+            }
+        }
+        
+        if(activeBundlePath.empty())
+        {
+            std::cout << pathsC << " active bundle " << activeBundleC << std::endl; 
+            throw std::runtime_error("Error, could not determine bundle path");
+        }
     }
     
     configDir = activeBundlePath + "/config/orogen/";
