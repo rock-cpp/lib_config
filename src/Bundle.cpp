@@ -20,7 +20,9 @@ Bundle::Bundle()
     }
     activeBundle = activeBundleC;
 
-    if(boost::filesystem::exists(activeBundle))
+    boost::filesystem::path abs = boost::filesystem::absolute(activeBundle);
+
+    if(abs == activeBundle && boost::filesystem::exists(activeBundle))
     {
         //new style, ROCK_BUNDLE contains full path
         activeBundlePath = activeBundle;
