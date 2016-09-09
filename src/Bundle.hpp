@@ -48,6 +48,13 @@ public:
      * containing the orogen config files.
      * */
     const std::string &getConfigurationDirectory();
+
+    /**
+     * Returns the path to the directory 
+     * containing the orogen config files.
+     * It checks all the available bundles.
+     * */
+    std::string getConfigurationPath(const std::string &task);
     
     /**
      * Returns the path to the directory 
