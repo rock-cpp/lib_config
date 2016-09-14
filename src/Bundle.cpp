@@ -118,6 +118,17 @@ const std::string &Bundle::getConfigurationDirectory()
     return configDir;
 }
 
+std::string Bundle::getConfigurationPath(const std::string &task)
+{
+    std::string relativePath = "config/orogen/"+ task + ".yml";
+    try{
+        std::string result = findFile(relativePath);
+        return result;
+    } catch (std::runtime_error &e){
+        throw std::runtime_error("Bundle::getConfigurationPath : Error, could not find config path for task " + task);
+    }
+}
+
 const std::string& Bundle::getLogDirectory()
 {
     if(logDir.empty())
@@ -136,13 +147,25 @@ std::string Bundle::findFile(const std::string& relativePath)
     std::string curPath = activeBundlePath + "/" + relativePath;
     if(boost::filesystem::exists(curPath))
         return curPath;
-    
     for(const std::string &bp: bundlePaths)
     {
-        curPath = bp + "/" + relativePath;
+        // Find it in the default bundle, in case ACTIVE_BUNDLES is not set
+        curPath = bp + "/" +activeBundle + "/" + relativePath;
         if(boost::filesystem::exists(curPath))
             return curPath;
+        const char *activeBundleC = getenv("ACTIVE_BUNDLES");
+        if (activeBundleC)
+        {
+            std::string selected_bundles = activeBundleC;
+            boost::char_separator<char> sep(":");
+            boost::tokenizer<boost::char_separator<char> > tokens(selected_bundles, sep);
+            for(const std::string &token : tokens)
+            {
+                curPath = bp + "/" + token + "/" + relativePath;
+                if(boost::filesystem::exists(curPath))
+                    return curPath;
+            }        
+        }
     }
-    
     throw std::runtime_error("Bundle::findFile : Error, could not find file " + relativePath);
 }
