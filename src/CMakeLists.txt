@@ -19,5 +19,5 @@ rock_library(lib_config
     )
 
 rock_executable(lib_config_bin Main.cpp
-    DEPS lib_config)
+    DEPS lib_config DEPS_PLAIN Boost_SYSTEM Boost_FILESYSTEM Boost_REGEX)
 
