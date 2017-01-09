@@ -84,7 +84,7 @@ std::shared_ptr< ConfigValue > TypelibConfiguration::getFromNumeric(Typelib::Val
                     break;
                 default:
                     std::cout << "Error, got integer of unexpected size " << numeric.getSize() << std::endl;
-                    return std::shared_ptr< ConfigValue >(new SimpleConfigValue("Nothing"));
+                    throw std::runtime_error("got integer of unexpected size " + numeric.getSize());
                     break;
             }
             break;
@@ -106,7 +106,7 @@ std::shared_ptr< ConfigValue > TypelibConfiguration::getFromNumeric(Typelib::Val
                     break;
                 default:
                     std::cout << "Error, got integer of unexpected size " << numeric.getSize() << std::endl;
-                    return std::shared_ptr< ConfigValue >(new SimpleConfigValue("Nothing"));
+                    throw std::runtime_error("got integer of unexpected size " + numeric.getSize());
                     break;
             }
         }
