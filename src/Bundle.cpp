@@ -94,7 +94,7 @@ bool Bundle::createLogDirectory()
     const std::string currentPath(activeBundlePath + "/logs/current");
     
     //create symlink to current
-    if(boost::filesystem::exists(currentPath))
+    if(boost::filesystem::is_symlink(currentPath))
     {
         boost::filesystem::remove(currentPath);
     }
