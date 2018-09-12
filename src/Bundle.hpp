@@ -48,20 +48,23 @@ public:
     
     /**
      * Returns the path to the directory 
+     * (in the currently selected bundle)
      * containing the orogen config files.
      * */
     const std::string &getConfigurationDirectory();
 
     /**
-     * Returns the path to the directory 
-     * containing the orogen config files.
-     * It checks all the available bundles.
+     * Returns the full path to the configuration file
+     * matching the given task model name.
+     * It checks all the active bundles,
+     * but only returns the first match. Throws
+     * and exception if no match was found.
      * */
     std::string getConfigurationPath(const std::string &task);
     
     /**
      * Returns the path to the directory 
-     * containing the data files.
+     * containing the data files in the active bundle.
      * */
     const std::string &getDataDirectory();
 
@@ -74,6 +77,10 @@ public:
      */
     std::vector<std::string> getConfigurationPaths(const std::string &task_model_name);
     
+    /**
+     * Checks in all active bundles for the relative file path
+     * and returns the first match.
+     */
     std::string findFile(const std::string &relativePath);
 
     /**
