@@ -197,7 +197,7 @@ void Bundle::discoverDependencies(const std::string &bundle_name, std::vector<st
 
     std::vector<std::string> deps = loadDependenciesFromYAML(config_file);
     dependencies.insert(dependencies.end(), deps.begin(), deps.end());
-    for(auto d : deps)
+    for(const std::string& d : deps)
     {
         // Don't consider duplicates and avoid cyclic dependencies.
         // TODO: When we do it this way, cyclic dependencies are ignored. Better throw here?
