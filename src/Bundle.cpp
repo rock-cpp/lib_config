@@ -196,6 +196,7 @@ void Bundle::discoverDependencies(const std::string &bundle_name, std::vector<st
         return;
 
     std::vector<std::string> deps = loadDependenciesFromYAML(config_file);
+    dependencies.insert(dependencies.end(), deps.begin(), deps.end());
     for(auto d : deps)
     {
         // Don't consider duplicates and avoid cyclic dependencies.
@@ -217,10 +218,13 @@ std::vector<std::string> Bundle::loadDependenciesFromYAML(const std::string &con
         deps = node["bundle"]["dependencies"].as<std::vector<std::string>>();
 
     // Erase duplicates
-    std::set<std::string> s( deps.begin(), deps.end() );
-    deps.assign( s.begin(), s.end());
+    std::vector<std::string> ret;
+    for(const std::string& d : deps){
+        if(std::find(ret.begin(), ret.end(), d) == ret.end())
+            ret.push_back(d);
+    }
 
-    return deps;
+    return ret;
 }
 
 std::string Bundle::findBundle(const std::string &bundle_name)
