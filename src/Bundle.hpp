@@ -33,7 +33,16 @@ private:
     bool createLogDirectory();
 
 public:
+    /**
+     * @brief Creates singelton class instance
+     * @return
+     */
     static Bundle &getInstance();
+    /**
+     * @brief Delete the singleton class
+     * @return
+     */
+    static Bundle &deleteInstance();
 
     const std::string &getActiveBundleName();
     

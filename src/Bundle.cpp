@@ -113,6 +113,12 @@ Bundle& Bundle::getInstance()
     return *instance;
 }
 
+Bundle &Bundle::deleteInstance()
+{
+    delete instance;
+    instance = nullptr;
+}
+
 const std::string &Bundle::getActiveBundleName()
 {
     return activeBundle;
