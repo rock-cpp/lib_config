@@ -6,6 +6,7 @@
 #include <boost/lexical_cast.hpp>
 #include <iostream>
 #include <base/Time.hpp>
+#include <yaml-cpp/yaml.h>
 
 using namespace libConfig;
 
@@ -70,6 +71,12 @@ Bundle::Bundle()
     
     configDir = activeBundlePath + "/config/orogen/";
     dataDir = activeBundlePath + "/data/";
+
+    activeBundles.push_back(activeBundle);
+    discoverDependencies(activeBundle, activeBundles);
+
+    for(const std::string& b : activeBundles)
+        activeBundlePaths.push_back(findBundle(b));
 }
 
 bool Bundle::createLogDirectory()
@@ -158,25 +165,86 @@ std::string Bundle::findFile(const std::string& relativePath)
     std::string curPath = activeBundlePath + "/" + relativePath;
     if(boost::filesystem::exists(curPath))
         return curPath;
-    for(const std::string &bp: bundlePaths)
+
+    for(const std::string &path : activeBundlePaths)
     {
-        // Find it in the default bundle, in case ACTIVE_BUNDLES is not set
-        curPath = bp + "/" +activeBundle + "/" + relativePath;
+        curPath = path + "/" + relativePath;
         if(boost::filesystem::exists(curPath))
             return curPath;
-        const char *activeBundleC = getenv("ACTIVE_BUNDLES");
-        if (activeBundleC)
-        {
-            std::string selected_bundles = activeBundleC;
-            boost::char_separator<char> sep(":");
-            boost::tokenizer<boost::char_separator<char> > tokens(selected_bundles, sep);
-            for(const std::string &token : tokens)
-            {
-                curPath = bp + "/" + token + "/" + relativePath;
-                if(boost::filesystem::exists(curPath))
-                    return curPath;
-            }        
-        }
     }
     throw std::runtime_error("Bundle::findFile : Error, could not find file " + relativePath);
+}
+
+std::vector<std::string> Bundle::getConfigurationPaths(const std::string &task_model_name)
+{
+    std::string relativePath = "config/orogen/"+ task_model_name + ".yml";
+    std::vector<std::string> paths = findFiles(relativePath);
+    if(paths.empty())
+        std::runtime_error("Bundle::getConfigurationPaths: Could not find configuration file for task " + task_model_name + " in any of the active bundles");
+    return paths;
+}
+
+std::vector<std::string> Bundle::findFiles(const std::string& relativePath)
+{
+    std::vector<std::string> paths;
+    for(const std::string &path : activeBundlePaths)
+    {
+        std::string curPath = path + "/" + relativePath;
+        if(boost::filesystem::exists(curPath))
+            paths.push_back(curPath);
+    }
+    return paths;
+}
+
+void Bundle::discoverDependencies(const std::string &bundle_name, std::vector<std::string> &dependencies)
+{
+    const std::string &bundle_path = findBundle(bundle_name);
+    if(bundle_path.empty())
+        throw std::runtime_error("Bundle::discoverDependencies: Bundle " + bundle_name + " could not be found.");
+
+    const std::string &config_file = bundle_path + "/config/bundle.yml";
+    if(!boost::filesystem::exists(config_file)) // No bundle.yml file exists. We assume that this bundle has no depending bundles
+        return;
+
+    std::vector<std::string> deps = loadDependenciesFromYAML(config_file);
+    dependencies.insert(dependencies.end(), deps.begin(), deps.end());
+    for(const std::string& d : deps)
+    {
+        // Don't consider duplicates and avoid cyclic dependencies.
+        // TODO: When we do it this way, cyclic dependencies are ignored. Better throw here?
+        if(std::find(dependencies.begin(), dependencies.end(), d) != dependencies.end())
+            continue;
+
+        dependencies.push_back(d);
+        discoverDependencies(d, dependencies);
+    }
+}
+
+std::vector<std::string> Bundle::loadDependenciesFromYAML(const std::string &config_file)
+{
+    YAML::Node node = YAML::LoadFile(config_file);
+
+    std::vector<std::string> deps;
+    if(node["bundle"]["dependencies"])
+        deps = node["bundle"]["dependencies"].as<std::vector<std::string>>();
+
+    // Erase duplicates
+    std::vector<std::string> ret;
+    for(const std::string& d : deps){
+        if(std::find(ret.begin(), ret.end(), d) == ret.end())
+            ret.push_back(d);
+    }
+
+    return ret;
+}
+
+std::string Bundle::findBundle(const std::string &bundle_name)
+{
+    for(const std::string &bp : bundlePaths)
+    {
+        const std::string curPath = bp + "/" + bundle_name;
+        if(boost::filesystem::is_directory(curPath))
+            return curPath;
+    }
+    return "";
 }
