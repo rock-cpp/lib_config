@@ -34,6 +34,8 @@ private:
 
 public:
     static Bundle &getInstance();
+
+    const std::string &getActiveBundleName();
     
     /**
      * Returns the log directory path.

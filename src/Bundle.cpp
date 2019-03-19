@@ -113,6 +113,11 @@ Bundle& Bundle::getInstance()
     return *instance;
 }
 
+const std::string &Bundle::getActiveBundleName()
+{
+    return activeBundle;
+}
+
 const std::string &Bundle::getConfigurationDirectory()
 {
     return configDir;
