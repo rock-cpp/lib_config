@@ -42,9 +42,10 @@ public:
      * @brief Delete the singleton class
      * @return
      */
-    static Bundle &deleteInstance();
+    static void deleteInstance();
 
     const std::string &getActiveBundleName();
+
     
     /**
      * Returns the log directory path.
