@@ -7,6 +7,39 @@
 namespace libConfig
 {
 
+// Representation of a single bundle
+class SingleBundle
+{
+public:
+    SingleBundle();
+    ~SingleBundle();
+    static SingleBundle fromNameAndSearchPaths(
+            std::string name, std::vector<std::string> searchPaths);
+    static SingleBundle fromFullPath(std::string bundlePath);
+
+    void setAndValidatePaths();
+    std::string name;
+    std::string path;
+    std::string logBaseDir;
+    std::string dataDir;
+    std::string configDir;
+    std::string orogenConfigDir;
+
+    friend bool operator== (SingleBundle &n1, std::string n2) {
+        return (n1.name == n2);
+    };
+    friend bool operator!= (SingleBundle &n1, std::string n2) {
+        return !(n1 == n2);
+    };
+    friend bool operator== (SingleBundle &n1, SingleBundle &n2) {
+        return (n1.name == n2.name);
+    };
+    friend bool operator!= (SingleBundle &n1, SingleBundle &n2) {
+        return !(n1 == n2.name);
+    };
+};
+
+// Represents a bundle with all its bundles it depends on
 class Bundle
 {
 private:
@@ -14,17 +47,12 @@ private:
     
     static Bundle *instance;
     
-    std::string activeBundle;
-    std::string activeBundlePath;
-    std::vector<std::string> bundlePaths;
+    std::vector<std::string> bundleSearchPaths;
+    //Contains the hierarchy of the selected bundles and its dependencies
+    std::vector<SingleBundle> activeBundles;
+    std::string currentLogDir;
 
-    std::vector<std::string> activeBundles;
-    std::vector<std::string> activeBundlePaths;
-    
-    std::string logDir;
-    std::string configDir;
-    std::string dataDir;
-    
+public:
     /**
      * This function creates a log directory 
      * under the activeBundlePath in the
@@ -35,7 +63,6 @@ private:
      * */
     bool createLogDirectory();
 
-public:
     /**
      * @brief Creates singelton class instance
      * @return
@@ -49,6 +76,11 @@ public:
 
     const std::string &getActiveBundleName();
 
+    /**
+     * @brief Returns reference to top-level bundle
+     */
+    SingleBundle& selectedBundle();
+
     
     /**
      * Returns the log directory path.
@@ -56,12 +88,14 @@ public:
      * created yet, it will get created
      * while calling this function.
      * */
-    const std::string &getLogDirectory();
+    std::string getLogDirectory();
     
     /**
-     * Returns the path to the directory 
+     * Returns the path to the directory
      * (in the currently selected bundle)
      * containing the orogen config files.
+     * \deprecated{There is no single configration Directory, but multipe as
+     *             since include bundle dependencies}
      * */
     const std::string &getConfigurationDirectory();
 
@@ -71,12 +105,16 @@ public:
      * It checks all the active bundles,
      * but only returns the first match. Throws
      * and exception if no match was found.
+     * \deprecated{There is no single configration Directory, but multipe as
+     *             since include bundle dependencies}
      * */
     std::string getConfigurationPath(const std::string &task);
     
     /**
      * Returns the path to the directory 
      * containing the data files in the active bundle.
+     * \deprecated{There is no single data Directory, but multipe as
+     *             since include bundle dependencies}
      * */
     const std::string &getDataDirectory();
 
@@ -110,7 +148,7 @@ public:
     /**
      * Find all dependencies of the given bundle. Ignores cyclic dependencies.
      */
-    void discoverDependencies(const std::string &bundle_name, std::vector<std::string> &dependencies);
+    void discoverDependencies(const SingleBundle &bundle, std::vector<SingleBundle> &dependencies);
 
     /**
      * Load the dependencies from the given bundle config file
