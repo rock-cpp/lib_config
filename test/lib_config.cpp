@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(construction)
 
     //Throws when bundle could not be found
     setenv("ROCK_BUNDLE", "bullshit", 1);
-    inst2 = libConfig::Bundle::getInstance();
+    BOOST_REQUIRE_THROW(inst2 = libConfig::Bundle::getInstance(), std::runtime_error);
     inst.deleteInstance();
     //Can resolve bundle configuration file
     //Can handle malformated bundle configuration file

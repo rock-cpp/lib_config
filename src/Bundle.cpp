@@ -120,7 +120,7 @@ Bundle& Bundle::getInstance()
     return *instance;
 }
 
-Bundle &Bundle::deleteInstance()
+void Bundle::deleteInstance()
 {
     delete instance;
     instance = nullptr;
