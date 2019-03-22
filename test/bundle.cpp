@@ -7,7 +7,6 @@
 #include <chrono>         // std::chrono::system_clock
 #include <ctime>          // std::time_t, std::tm, std::localtime, std::mktime
 
-
 namespace fs = boost::filesystem;
 const std::string bundle_path="/tmp/lib_config_bundles";
 
@@ -26,6 +25,16 @@ void prepare_bundle(std::string name,
     fs::create_directory(bundle_root / "config" / "orogen");
     std::ofstream fs((bundle_root / "config" / "orogen" / "my::Task.yml").string(),
                   std::ios_base::out);
+    fs << "--- name:default\n";
+    fs << "axisScale: []\n";
+    fs << "name: defaultname\n";
+
+    fs << "--- name:specialized\n";
+    fs << "axisScale: [1,2,3]\n";
+    fs << "name: " << name << "\n";
+    fs << "--- name:"<<name << "\n";
+    fs << "axisScale: [1,2,3]\n";
+    fs << "name: " << name << "\n";
     fs.close();
     fs::create_directory(bundle_root / "logs");
 
@@ -89,7 +98,7 @@ BOOST_AUTO_TEST_CASE(construction)
     BOOST_CHECK_EQUAL(inst.getActiveBundleName(), "first");
 
     //Finding files is working properly with disabled dependencies
-    std::string s = inst.findFile("config/bundle.yml");
+    std::string s = inst.findFileByName("config/bundle.yml");
     BOOST_CHECK_EQUAL(s, selected_bundle_dir.string()+"/config/bundle.yml");
     inst.deleteInstance();
 
@@ -103,7 +112,7 @@ BOOST_AUTO_TEST_CASE(construction)
     //Should have depdendencies resolved.
     //Check that dependency resolution is breadth-first and that file finding
     //is done correctly (breadth-first)
-    std::vector<std::string> candidates = inst.findFiles("config/bundle.yml");
+    std::vector<std::string> candidates = inst.findFilesByName("config/bundle.yml");
     BOOST_ASSERT(candidates.size() == 4);
     BOOST_CHECK_NE(candidates[0].find("first"), std::string::npos);
     BOOST_CHECK_NE(candidates[1].find("second"), std::string::npos);
@@ -139,16 +148,52 @@ BOOST_AUTO_TEST_CASE(construction)
     //Can detect config files by Task prototype
     std::string p = inst.getConfigurationPath("my::Task");
     BOOST_CHECK_EQUAL(p, selected_bundle_dir.string()+"/config/orogen/my::Task.yml");
-    candidates = inst.getConfigurationPaths("my::Task");
+    candidates = inst.getConfigurationPathsForTaskModel("my::Task");
     BOOST_ASSERT(candidates.size() == 4);
     BOOST_CHECK_NE(candidates[0].find("first"), std::string::npos);
     BOOST_CHECK_NE(candidates[1].find("second"), std::string::npos);
     BOOST_CHECK_NE(candidates[2].find("third"), std::string::npos);
     BOOST_CHECK_NE(candidates[3].find("fourth"), std::string::npos);
 
+    //!Can find files by extesion
+    //findFilesByExtension("config/orogen","yml");
+
     //Throws when bundle could not be found
     inst.deleteInstance();
     setenv("ROCK_BUNDLE", "bullshit", 1);
     BOOST_REQUIRE_THROW(inst2 = libConfig::Bundle::getInstance(), std::runtime_error);
     inst.deleteInstance();
+}
+
+BOOST_AUTO_TEST_CASE(task_configuration)
+{
+    clear_environment_variables();
+    setenv("ROCK_BUNDLE_PATH", bundle_path.c_str(), 1);
+    setenv("ROCK_BUNDLE", "first", 1);
+    libConfig::Bundle& inst = libConfig::Bundle::getInstance();
+    inst.initialize();
+
+    //Active bundles are first,second,third,fourth (highest prio first)
+    //Two sections are resent in each bundle. Each bundle adds one additional
+    //section. Expected numer of sections --> 6
+    libConfig::MultiSectionConfiguration mcfg = inst.taskConfigurations.getMultiConfig("my::Task");
+    BOOST_CHECK_EQUAL(mcfg.getSubsections().size(), 6);
+
+    //Bundle "first" should overwrite all others, section
+    //'specialized' should overwrite 'default'
+    libConfig::Configuration cfg = inst.taskConfigurations.getConfig(
+                "my::Task", {"default", "specialized"});
+    std::map< std::string, std::shared_ptr<libConfig::ConfigValue> > vals =
+            cfg.getValues();
+    std::shared_ptr<libConfig::SimpleConfigValue> val =
+            std::dynamic_pointer_cast<libConfig::SimpleConfigValue>(vals["name"]);
+    BOOST_CHECK_EQUAL(val->getValue(), "first");
+
+    //Acces to section imported from lower priorized bundle is possible
+    cfg = inst.taskConfigurations.getConfig(
+                    "my::Task", {"default", "fourth"});
+    vals = cfg.getValues();
+    val = std::dynamic_pointer_cast<libConfig::SimpleConfigValue>(vals["name"]);
+    BOOST_CHECK_EQUAL(val->getValue(), "fourth");
+    BOOST_ASSERT(true);
 }

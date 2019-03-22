@@ -332,7 +332,7 @@ std::string YAMLConfigParser::applyStringVariableInsertions(const std::string& v
             
             std::string file;
             try{
-                file = Bundle::getInstance().findFile(var);
+                file = Bundle::getInstance().findFileByName(var);
             }
             catch (...)
             {

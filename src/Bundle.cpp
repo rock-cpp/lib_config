@@ -7,6 +7,8 @@
 #include <iostream>
 #include <base/Time.hpp>
 #include <yaml-cpp/yaml.h>
+#include "YAMLConfiguration.hpp"
+
 
 namespace fs = boost::filesystem;
 using namespace libConfig;
@@ -235,6 +237,15 @@ void Bundle::deleteInstance()
     instance = nullptr;
 }
 
+void Bundle::initialize()
+{
+
+    //Initialze TaskConfigurations
+    std::vector<std::string> configs = findFilesByExtension(
+                (fs::path("config") / "orogen").string(), ".yml");
+    taskConfigurations.initialize(configs);
+}
+
 const std::string &Bundle::getActiveBundleName()
 {
     return selectedBundle().name;
@@ -254,7 +265,7 @@ std::string Bundle::getConfigurationPath(const std::string &task)
 {
     std::string relativePath = "config/orogen/"+ task + ".yml";
     try{
-        std::string result = findFile(relativePath);
+        std::string result = findFileByName(relativePath);
         return result;
     } catch (std::runtime_error &e){
         throw std::runtime_error("Bundle::getConfigurationPath : Error, could not find config path for task " + task);
@@ -274,7 +285,7 @@ const std::string& Bundle::getDataDirectory()
     return selectedBundle().dataDir;
 }
 
-std::string Bundle::findFile(const std::string& relativePath)
+std::string Bundle::findFileByName(const std::string& relativePath)
 {
     for(const SingleBundle &bundle : activeBundles)
     {
@@ -285,7 +296,7 @@ std::string Bundle::findFile(const std::string& relativePath)
     throw std::runtime_error("Bundle::findFile : Error, could not find file " + relativePath);
 }
 
-std::vector<std::string> Bundle::findFiles(const std::string& relativePath)
+std::vector<std::string> Bundle::findFilesByName(const std::string& relativePath)
 {
     std::vector<std::string> paths;
     for(const SingleBundle &bundle : activeBundles)
@@ -297,10 +308,37 @@ std::vector<std::string> Bundle::findFiles(const std::string& relativePath)
     return paths;
 }
 
-std::vector<std::string> Bundle::getConfigurationPaths(const std::string &task_model_name)
+std::vector<std::string> Bundle::findFilesByExtension(
+        const std::string &relativePath, const std::string &ext)
+{
+    std::vector<std::string> ret;
+    for(const SingleBundle &bundle : activeBundles)
+    {
+        fs::path root = fs::path(bundle.path) / relativePath;
+        if(!fs::exists(root) || !fs::is_directory(root))
+            continue;
+
+        fs::recursive_directory_iterator it(root);
+        fs::recursive_directory_iterator endit;
+
+        while(it != endit)
+        {
+            fs::path p = it->path();
+            if(fs::is_regular_file(*it) && it->path().extension() == ext)
+            {
+                ret.push_back(it->path().string());
+            }
+            ++it;
+        }
+    }
+    return ret;
+}
+
+std::vector<std::string> Bundle::getConfigurationPathsForTaskModel(
+        const std::string &task_model_name)
 {
     fs::path relativePath = fs::path("config") / "orogen" / (task_model_name+".yml");
-    std::vector<std::string> paths = findFiles(relativePath.string());
+    std::vector<std::string> paths = findFilesByName(relativePath.string());
     if(paths.empty()){
         std::runtime_error(std::string() + "Bundle::getConfigurationPaths: " +
                            "Could not find configuration file for task " +
@@ -379,3 +417,37 @@ std::string Bundle::findBundle(const std::string &bundle_name)
     return b.path;
 }
 
+
+void TaskConfigurations::initialize(const std::vector<std::string> &configFiles)
+{
+    taskConfigurations.clear();
+
+    for(const std::string& cfgFilePath : configFiles)
+    {
+        MultiSectionConfiguration cfgFile;
+        cfgFile.load(cfgFilePath);
+        std::string& task = cfgFile.taskModelName;
+        if(taskConfigurations.find(task) == taskConfigurations.end()){
+            //First config file for that task
+            taskConfigurations.insert(std::make_pair(task, cfgFile));
+        }else
+        {
+            //There was already a config file laoded. Due to ordering in vector
+            //the new config file must be of lower priority
+            taskConfigurations.at(task).mergeConfigFile(cfgFile);
+        }
+    }
+}
+
+Configuration TaskConfigurations::getConfig(const std::string &taskModelName,
+                                            const std::vector<std::string> &sections)
+{
+    MultiSectionConfiguration& mcfg = taskConfigurations.at(taskModelName);
+    Configuration cfg = mcfg.getConfig(sections);
+    return cfg;
+}
+
+const MultiSectionConfiguration &TaskConfigurations::getMultiConfig(const std::string &taskModelName)
+{
+    return taskConfigurations.at(taskModelName);
+}

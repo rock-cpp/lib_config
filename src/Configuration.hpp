@@ -18,6 +18,8 @@ public:
         ARRAY,
     };
     
+    //Priority of other value is higher. i.e. values specified in other
+    //replace values specified in this
     virtual bool merge(std::shared_ptr<ConfigValue> other) = 0;
     
     const std::string &getName() const;
@@ -81,10 +83,13 @@ class Configuration
 {
 public:
     Configuration(const std::string &name);
+    Configuration();
     ~Configuration();
     
     void print(std::ostream &stream = std::cout) const;
     bool fillFromYaml(const std::string &yml);
+    //Other configuration has higher priority. I.e. values in other replace
+    //values in this.
     bool merge(const Configuration &other);
     
     const std::string &getName() const;
@@ -93,6 +98,24 @@ public:
 private:
     std::string name;
     std::map<std::string, std::shared_ptr<ConfigValue> > values;
+};
+
+class MultiSectionConfiguration
+{
+public:
+    MultiSectionConfiguration();
+    bool load(std::string filepath);
+    //Sections should be sorted with increasing priority.
+    //e.g. [default,specific,more_specific]
+    //here default has lowest and more_specific highest priority
+    Configuration getConfig(const std::vector<std::string> &sections);
+    bool mergeConfigFile(const MultiSectionConfiguration& lowerPriorityFile);
+    std::string taskModelName;
+    const std::map<std::string, Configuration>& getSubsections();
+protected:
+    //Maps a configuration subsection name to Configuration
+    std::map<std::string, Configuration> subsections;
+    //std::string filepath;
 };
 
 std::ostream& operator <<(std::ostream& stream, const Configuration &conf);

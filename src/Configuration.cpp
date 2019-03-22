@@ -1,7 +1,9 @@
 #include "Configuration.hpp"
 #include "YAMLConfiguration.hpp"
 #include <iostream>
+#include <boost/filesystem.hpp>
 
+namespace fs = boost::filesystem;
 using namespace libConfig;
 
 ComplexConfigValue::ComplexConfigValue(): ConfigValue(COMPLEX)
@@ -220,6 +222,11 @@ Configuration::Configuration(const std::string& name) : name(name)
 
 }
 
+Configuration::Configuration()
+{
+
+}
+
 Configuration::~Configuration()
 {
 }
@@ -259,7 +266,8 @@ bool Configuration::fillFromYaml(const std::string& yml)
 
 bool Configuration::merge(const Configuration& other)
 {
-    for(std::map<std::string, std::shared_ptr<ConfigValue> >::const_iterator it = other.values.begin(); it != other.values.end(); it++)
+    std::map<std::string, std::shared_ptr<ConfigValue> >::const_iterator it;
+    for(it = other.values.begin(); it != other.values.end(); it++)
     {
         std::map<std::string, std::shared_ptr<ConfigValue> >::iterator entry = values.find(it->first);
         if(entry != values.end())
@@ -274,4 +282,84 @@ bool Configuration::merge(const Configuration& other)
     }
     
     return true;
+}
+
+MultiSectionConfiguration::MultiSectionConfiguration()
+{
+
+}
+
+bool MultiSectionConfiguration::load(std::string filepath)
+{
+    taskModelName = fs::path(filepath).stem().string();
+    if(taskModelName.find("::") == std::string::npos){
+        std::clog << "File " << taskModelName << "does not appear to be a oroGen" <<
+                     "configuration file." << std::endl;
+        taskModelName = "";
+        return false;
+    }
+
+    libConfig::YAMLConfigParser parser;
+    try{
+        parser.loadConfigFile(filepath, this->subsections);
+    }catch(std::runtime_error &e){
+        std::cerr << "Error loaded configuration file " << filepath <<
+                     std::endl;
+        throw std::runtime_error("Failed to load configuration file " +
+                                 filepath);
+    }
+    return true;
+}
+
+Configuration MultiSectionConfiguration::getConfig(
+        const std::vector<std::string>& sections)
+{
+    std::string mergedConfigName;
+    bool first = true;
+    for (const auto &piece : sections){
+        if(!first){
+            mergedConfigName += ",";
+        }
+        mergedConfigName += piece;
+        first = false;
+    };
+
+    Configuration result(mergedConfigName);
+    for(const std::string &conf: sections){
+        try{
+            result.merge(this->subsections.at(conf));
+        }catch(std::out_of_range &e){
+            throw std::runtime_error(
+                        "No configuration section names '" + conf + "' for " +
+                        "Task '" + taskModelName + "'");
+        }
+    }
+    return result;
+}
+
+bool MultiSectionConfiguration::mergeConfigFile(
+        const MultiSectionConfiguration &lowerPriorityFile)
+{
+    for(const std::pair<std::string, Configuration>& other : lowerPriorityFile.subsections)
+    {
+        const std::string& sectionName = other.first;
+        const Configuration& otherCfg = other.second;
+        if(subsections.find(sectionName) == subsections.end()){
+            //lowerPrioFile defines a subsection that was not defined before
+            subsections.insert(std::make_pair(sectionName, otherCfg));
+        }else{
+            //lowerPrioFile defines a subsection that was already defined before
+            Configuration higher = subsections.at(sectionName);
+            Configuration merged(sectionName);
+            merged.merge(otherCfg);
+            merged.merge(higher);
+            subsections[sectionName] = merged;
+        }
+    }
+    return true;
+}
+
+const std::map<std::string, Configuration> &MultiSectionConfiguration::getSubsections()
+{
+    return subsections;
 }

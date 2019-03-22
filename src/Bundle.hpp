@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include "Configuration.hpp"
 
 namespace libConfig
 {
@@ -39,6 +40,19 @@ public:
     };
 };
 
+class TaskConfigurations{
+private:
+    //Contains the merged configuration files from all bundles. The string
+    //ist the task model name
+    std::map<std::string, MultiSectionConfiguration> taskConfigurations;
+public:
+    TaskConfigurations(){}
+    void initialize(const std::vector<std::string>& configFiles);
+    Configuration getConfig(const std::string& taskModelName,
+                            const std::vector<std::string>& sections);
+    const MultiSectionConfiguration& getMultiConfig(const std::string& taskModelName);
+};
+
 // Represents a bundle with all its bundles it depends on
 class Bundle
 {
@@ -53,6 +67,8 @@ private:
     std::string currentLogDir;
 
 public:
+    TaskConfigurations taskConfigurations;
+
     /**
      * This function creates a log directory 
      * under the activeBundlePath in the
@@ -68,11 +84,14 @@ public:
      * @return
      */
     static Bundle &getInstance();
+
     /**
      * @brief Delete the singleton class
      * @return
      */
     static void deleteInstance();
+
+    void initialize();
 
     const std::string &getActiveBundleName();
 
@@ -125,19 +144,23 @@ public:
      * is the same as the order of active bundles.
      * Throws an exception if no match is found.
      */
-    std::vector<std::string> getConfigurationPaths(const std::string &task_model_name);
+    std::vector<std::string> getConfigurationPathsForTaskModel(
+            const std::string &task_model_name);
     
     /**
      * Checks in all active bundles for the relative file path
      * and returns the first match.
      */
-    std::string findFile(const std::string &relativePath);
+    std::string findFileByName(const std::string &relativePath);
 
     /**
      * Checks in all active bundles for the relative file path
      * and returns all matches.
      */
-    std::vector<std::string> findFiles(const std::string& relativePath);
+    std::vector<std::string> findFilesByName(const std::string& relativePath);
+    //Extension has to be given with dot. E.g. ".yml" NOT "yml"
+    std::vector<std::string> findFilesByExtension(
+            const std::string& relativePath, const std::string& ext);
 
     /**
      * Checks the bundle paths for the given bundle
