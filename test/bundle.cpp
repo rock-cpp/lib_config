@@ -171,7 +171,6 @@ BOOST_AUTO_TEST_CASE(task_configuration)
     setenv("ROCK_BUNDLE_PATH", bundle_path.c_str(), 1);
     setenv("ROCK_BUNDLE", "first", 1);
     libConfig::Bundle& inst = libConfig::Bundle::getInstance();
-    inst.initialize();
 
     //Active bundles are first,second,third,fourth (highest prio first)
     //Two sections are resent in each bundle. Each bundle adds one additional

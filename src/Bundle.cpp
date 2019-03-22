@@ -225,8 +225,10 @@ bool Bundle::createLogDirectory()
 
 Bundle& Bundle::getInstance()
 {
-    if(!instance)
+    if(!instance){
         instance = new Bundle();
+        instance->initialize();
+    }
 
     return *instance;
 }
