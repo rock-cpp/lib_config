@@ -140,52 +140,6 @@ void SingleBundle::setAndValidatePaths()
 
 Bundle::Bundle()
 {
-    activeBundles.clear();
-    //Read environment variables:
-    //  ROCK_BUNDLE: contains currently selected bundle (name or absolute path)
-    //  ROCK_BUNDLE_PATH: contains search paths, where to look for a bundle.
-    //                    multiple paths are separated by ':'
-    const char *activeBundleC = getenv("ROCK_BUNDLE");
-    if(!activeBundleC)
-    {
-        throw std::runtime_error(std::string() + "Error, no active bundle " +
-                                 "configured. Please use 'rock-bundle-default'"+
-                                 " to set one.");
-    }
-
-    const char *pathsC = getenv("ROCK_BUNDLE_PATH");
-    if(pathsC)
-    {
-        std::string paths = pathsC;
-        bundleSearchPaths = tokenize(paths, ':');
-    }else
-    {
-        std::clog << "No bundle search path set. Consider setting environment "\
-                     "variable ROCK_BUNDLE_PATH." << std::endl;
-    }
-
-    //Determine if ROCK_BUNDLE contained absolute path or bundle name
-    fs::path pathCheck(activeBundleC);
-    SingleBundle bundle;
-    if(pathCheck.is_absolute() && fs::exists(pathCheck))
-    {
-        //ROCK_BUNDLE contains an absolute path
-        bundle = SingleBundle::fromFullPath(pathCheck.string());
-    }else
-    {
-        //ROCK_BUNDLE contains bundle name
-        bundle = SingleBundle::fromNameAndSearchPaths(activeBundleC,
-                                                      bundleSearchPaths);
-    }
-
-    activeBundles.push_back(bundle);
-    if(bundleSearchPaths.empty())
-    {
-        std::clog << "Bundle search path is not set. Dependency resolutibn " <<
-                     "to other bundles is disabled.";
-    }else{
-        discoverDependencies(selectedBundle(), activeBundles);
-    }
 }
 
 bool Bundle::createLogDirectory()
@@ -241,11 +195,70 @@ void Bundle::deleteInstance()
 
 void Bundle::initialize()
 {
+    std::clog << "Initializing Bundles" << std::endl;
+    activeBundles.clear();
+    std::clog << "Determining selected bundle" << std::endl;
+    //Read environment variables:
+    //  ROCK_BUNDLE: contains currently selected bundle (name or absolute path)
+    //  ROCK_BUNDLE_PATH: contains search paths, where to look for a bundle.
+    //                    multiple paths are separated by ':'
+    const char *activeBundleC = getenv("ROCK_BUNDLE");
+    if(!activeBundleC)
+    {
+        throw std::runtime_error(std::string() + "Error, no active bundle " +
+                                 "configured. Please use 'rock-bundle-default'"+
+                                 " to set one.");
+    }
+
+    const char *pathsC = getenv("ROCK_BUNDLE_PATH");
+    if(pathsC)
+    {
+        std::string paths = pathsC;
+        bundleSearchPaths = tokenize(paths, ':');
+    }else
+    {
+        std::clog << "No bundle search path set. Consider setting environment "\
+                     "variable ROCK_BUNDLE_PATH." << std::endl;
+    }
+
+    //Determine if ROCK_BUNDLE contained absolute path or bundle name
+    fs::path pathCheck(activeBundleC);
+    SingleBundle bundle;
+    if(pathCheck.is_absolute() && fs::exists(pathCheck))
+    {
+        //ROCK_BUNDLE contains an absolute path
+        bundle = SingleBundle::fromFullPath(pathCheck.string());
+    }else
+    {
+        //ROCK_BUNDLE contains bundle name
+        bundle = SingleBundle::fromNameAndSearchPaths(activeBundleC,
+                                                      bundleSearchPaths);
+    }
+    std::clog << "Currently selected bundle: "<<bundle.name << " at " <<
+                 bundle.path << std::endl;
+
+    activeBundles.push_back(bundle);
+
+    std::clog << "Discovering bundle dependencies" << std::endl;
+    if(bundleSearchPaths.empty())
+    {
+        std::clog << "Bundle search path is not set. Dependency resolutibn " <<
+                     "to other bundles is disabled.";
+    }else{
+        discoverDependencies(selectedBundle(), activeBundles);
+    }
+    std::clog << "Active bundles: " << std::endl;
+    for(SingleBundle& b : activeBundles){
+        std::clog << "   " << b.name << " at " << b.path << "\n";
+    }
+    std::clog << std::endl;
 
     //Initialze TaskConfigurations
+    std::clog << "Loading task configuration files from bundle" << std::endl;
     std::vector<std::string> configs = findFilesByExtension(
                 (fs::path("config") / "orogen").string(), ".yml");
     taskConfigurations.initialize(configs);
+    std::clog << "Bundles successfully initialized" << std::endl;
 }
 
 const std::string &Bundle::getActiveBundleName()
@@ -389,6 +402,7 @@ void Bundle::discoverDependencies(const SingleBundle &bundle,
         dependencies.push_back(d);
         to_inspect.push_back(d);
     }
+
     for(const SingleBundle& bundle : to_inspect){
         discoverDependencies(bundle, dependencies);
     }
@@ -396,11 +410,24 @@ void Bundle::discoverDependencies(const SingleBundle &bundle,
 
 std::vector<std::string> Bundle::loadDependenciesFromYAML(const std::string &config_file)
 {
-    YAML::Node node = YAML::LoadFile(config_file);
+    std::clog << "Parsing bundle configuration file " << config_file << std::endl;
+    YAML::Node node;
+    try{
+        node = YAML::LoadFile(config_file);
+    }catch(std::runtime_error ex){
+        std::cerr << "Could not parse bundle config file " << config_file <<
+                     ": " << ex.what() << std::endl;
+        throw(ex);
+    }
 
     std::vector<std::string> deps;
-    if(node["bundle"]["dependencies"])
-        deps = node["bundle"]["dependencies"].as<std::vector<std::string>>();
+    try{
+        if(node["bundle"] && node["bundle"]["dependencies"]){
+            deps = node["bundle"]["dependencies"].as<std::vector<std::string>>();
+        }
+    }catch(std::runtime_error ex){
+        std::cerr << "Error extracting dependecies from " << config_file << std::endl;
+    }
 
     // Erase duplicates
     std::vector<std::string> ret;
@@ -408,7 +435,6 @@ std::vector<std::string> Bundle::loadDependenciesFromYAML(const std::string &con
         if(std::find(ret.begin(), ret.end(), d) == ret.end())
             ret.push_back(d);
     }
-
     return ret;
 }
 
@@ -427,7 +453,12 @@ void TaskConfigurations::initialize(const std::vector<std::string> &configFiles)
     for(const std::string& cfgFilePath : configFiles)
     {
         MultiSectionConfiguration cfgFile;
-        cfgFile.load(cfgFilePath);
+        std::clog << "Loading config file " << cfgFilePath <<std::endl;
+        bool st = cfgFile.load(cfgFilePath);
+        if(!st){
+            std::clog << "File " << cfgFilePath << " could not be parsed" << std::endl;
+            continue;
+        }
         std::string& task = cfgFile.taskModelName;
         if(taskConfigurations.find(task) == taskConfigurations.end()){
             //First config file for that task
