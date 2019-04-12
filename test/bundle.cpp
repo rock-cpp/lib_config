@@ -195,4 +195,16 @@ BOOST_AUTO_TEST_CASE(task_configuration)
     val = std::dynamic_pointer_cast<libConfig::SimpleConfigValue>(vals["name"]);
     BOOST_CHECK_EQUAL(val->getValue(), "fourth");
     BOOST_ASSERT(true);
+
+    inst.deleteInstance();
 }
+
+BOOST_AUTO_TEST_CASE(still_working_without_bundle_selected)
+{
+    clear_environment_variables();
+    libConfig::Bundle inst;
+    bool st = inst.initialized();
+    BOOST_CHECK(!st); //Must be false because no bundle was selected
+    BOOST_CHECK(!inst.initialize()); //Must be false because no bundle was selected
+}
+

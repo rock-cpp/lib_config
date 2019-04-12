@@ -142,6 +142,11 @@ Bundle::Bundle()
 {
 }
 
+bool Bundle::initialized()
+{
+    return activeBundles.size() > 0;
+}
+
 bool Bundle::createLogDirectory()
 {
     base::Time curTime = base::Time::now();
@@ -181,7 +186,13 @@ Bundle& Bundle::getInstance()
 {
     if(!instance){
         instance = new Bundle();
-        instance->initialize();
+        bool st = instance->initialize();
+        if(!st){
+            instance = nullptr;
+            throw(std::runtime_error(std::string()+"Error, no active bundle " +
+            "configured. Please use 'rock-bundle-default'"+
+            " to set one."));
+        }
     }
 
     return *instance;
@@ -193,7 +204,7 @@ void Bundle::deleteInstance()
     instance = nullptr;
 }
 
-void Bundle::initialize()
+bool Bundle::initialize()
 {
     std::clog << "Initializing Bundles" << std::endl;
     activeBundles.clear();
@@ -205,9 +216,9 @@ void Bundle::initialize()
     const char *activeBundleC = getenv("ROCK_BUNDLE");
     if(!activeBundleC)
     {
-        throw std::runtime_error(std::string() + "Error, no active bundle " +
-                                 "configured. Please use 'rock-bundle-default'"+
-                                 " to set one.");
+        std::cerr << "ROCK_BUNDLE not set. Bundle cannot be initialized." <<
+                     std::endl;
+        return false;
     }
 
     const char *pathsC = getenv("ROCK_BUNDLE_PATH");
@@ -259,6 +270,8 @@ void Bundle::initialize()
                 (fs::path("config") / "orogen").string(), ".yml");
     taskConfigurations.initialize(configs);
     std::clog << "Bundles successfully initialized" << std::endl;
+
+    return true;
 }
 
 const std::string &Bundle::getActiveBundleName()

@@ -57,8 +57,6 @@ public:
 class Bundle
 {
 private:
-    Bundle();
-    
     static Bundle *instance;
     
     std::vector<std::string> bundleSearchPaths;
@@ -67,7 +65,13 @@ private:
     std::string currentLogDir;
 
 public:
+    Bundle();
     TaskConfigurations taskConfigurations;
+
+    /**
+     * @brief Check if bundle is suscessfully initialized
+     */
+    bool initialized();
 
     /**
      * This function creates a log directory 
@@ -91,7 +95,7 @@ public:
      */
     static void deleteInstance();
 
-    void initialize();
+    bool initialize();
 
     const std::string &getActiveBundleName();
 
