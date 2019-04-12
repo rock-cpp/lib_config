@@ -11,16 +11,15 @@ Thereby all folders are give *relative to the root folder of a bundle*:
 ## `config/orogen`
 YAML-like files containing configuration properties for components of a 
 certain prototype. The name of a file within the folder has to correspond
-with the name of the prototype it contains the configuration properties for
+with the name of the prototype it contains the configuration properties for.
 
-TIP: **Example:**
-The file `config/orogen/joint_dispatcher::Task.yml` contains the properties
-for the Rock-Task `joint:dispatcher::Task`.
+**Example:**
+The file `config/orogen/joint_dispatcher::Task.yml` contains the properties for the Rock-Task `joint:dispatcher::Task`.
 
 ## `data`
 Directory used for not further specified data.
 
-TODO: **TODO:**
+**TODO:** 
 Clarify if and where in the code this folder is used and evaulate the reason.
 
 ## `logs`
@@ -30,7 +29,7 @@ log directory in the `logs` folder using the following pattern:
 `logs/%Y%m%d-%H%M`.
 
 If the function is called multiple times within the same minute, the name gets 
-extended with a suffix: `logs/%Y%m%d-%H%M.i`, where `i` 
+extended with a suffix: `logs/%Y%m%d-%H%M.i`, where `i` is incremented.
 
 ## `logs/current`
 When the API function `Bundle::createLogDirectory()` is called (see `logs`),
@@ -47,7 +46,7 @@ map called `bundle`. The following properties are supported:
  * `dependencies`: A list of bundle names containing data that is required for
    the present bundle to work.
 
-TIP: **Example:**
+**Example:**
 ```YAML
 # Bundle-specific configuration
 bundle:
@@ -64,8 +63,8 @@ bundles.
 We have a breadth-first discovery behaviour of dependencies. This means that
 first level dependecies are considered more relvant than second level
 dependencies. 
-TIP: **Example:**
-An example: This dependency tree
+
+**Example:** This dependency tree
 ```
      bundle_1
        |- bundle_2
@@ -88,7 +87,7 @@ Configures the currently selected bundle. `lib_config` allos to specify the
 bundle either by its name (i.e. folder-name of the Bundle visible within 
 `ROCK_BUNDLE_PATH`) or absolute path.
 
-TIP: **Example:**
+**Example:**
 Both examples
 ```bash
 ROCK_BUNDLE_PATH=/home/malte/rock/bundles
@@ -105,7 +104,7 @@ refer to the same bundle at `/home/malte/rock/bundles/my_bundle` for
 Defines a set of absolute folder-paths which are searched for bundles. Multiple 
 paths are separated by thhe `:`-symbol.
 
-TIP: **Example:**
+**Example:**
 ```bash
 ROCK_BUNDLE_PATH=/home/malte/rock/bundles:/home/malte/rock/other_bundles
 ```
