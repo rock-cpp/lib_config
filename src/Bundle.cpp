@@ -17,9 +17,9 @@ Bundle * Bundle::instance;
 
 //Splits a string into a vector at the position of a specific tokens that are
 //present in the input string.
-std::vector<std::string> tokenize(std::string data, char delim)
+std::vector<std::string> tokenize(std::string data, std::string delim)
 {
-    boost::char_separator<char> sep(&delim);
+    boost::char_separator<char> sep(delim.c_str());
     boost::tokenizer<boost::char_separator<char> > tokens(data, sep);
 
     std::vector<std::string> ret;
@@ -89,7 +89,7 @@ SingleBundle SingleBundle::fromFullPath(std::string bundlePath)
 {
     SingleBundle bundle;
     bundle.path = bundlePath;
-    std::vector<std::string> tkn = tokenize(bundlePath, '/');
+    std::vector<std::string> tkn = tokenize(bundlePath, "/");
     bundle.name = tkn.back();
     bundle.setAndValidatePaths();
     return bundle;
@@ -225,7 +225,7 @@ bool Bundle::initialize()
     if(pathsC)
     {
         std::string paths = pathsC;
-        bundleSearchPaths = tokenize(paths, ':');
+        bundleSearchPaths = tokenize(paths, ":");
     }else
     {
         std::clog << "No bundle search path set. Consider setting environment "\
