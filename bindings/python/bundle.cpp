@@ -22,7 +22,13 @@ BOOST_PYTHON_MODULE(bundle)
             .def(py::vector_indexing_suite<std::vector<std::string> >())
         ;
 
-    py::class_<SingleBundle>("SingleBundle");
+    py::class_<SingleBundle>("SingleBundle")
+            .def_readwrite("name", &SingleBundle::name)
+            .def_readwrite("path", &SingleBundle::path)
+            .def_readwrite("logBaseDir", &SingleBundle::logBaseDir)
+            .def_readwrite("dataDir", &SingleBundle::dataDir)
+            .def_readwrite("configDir", &SingleBundle::configDir)
+            .def_readwrite("orogenConfigDir", &SingleBundle::orogenConfigDir);
     py::class_<Bundle>("Bundle")
             .def("initialize", &Bundle::initialize)
             .def("getActiveBundleName", &Bundle::getActiveBundleName,
