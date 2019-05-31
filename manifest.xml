@@ -10,4 +10,5 @@
   <depend package="base/types" />
   <depend package="yaml-cpp" />
   <depend package="typelib" />
+  <depend package="python" optional="1"/>
 </package>

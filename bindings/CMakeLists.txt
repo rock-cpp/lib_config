@@ -1,0 +1,11 @@
+find_package(PkgConfig)
+pkg_check_modules(PYTHON python)
+if(PYTHON_FOUND)
+    option(WITH_PYTHON "build python bindings" ON)
+else()
+    option(WITH_PYTHON "build python bindings" OFF)
+endif()
+
+if(WITH_PYTHON)
+add_subdirectory(python)
+endif()
