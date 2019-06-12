@@ -204,7 +204,14 @@ void Bundle::deleteInstance()
     instance = nullptr;
 }
 
-bool Bundle::initialize()
+void Bundle::loadTaskConfigurations()
+{
+    std::vector<std::string> configs = findFilesByExtension(
+                (fs::path("config") / "orogen").string(), ".yml");
+    taskConfigurations.initialize(configs);
+}
+
+bool Bundle::initialize(bool loadTaskConfigs)
 {
     std::clog << "Initializing Bundles" << std::endl;
     activeBundles.clear();
@@ -265,10 +272,10 @@ bool Bundle::initialize()
     std::clog << std::endl;
 
     //Initialze TaskConfigurations
-    std::clog << "Loading task configuration files from bundle" << std::endl;
-    std::vector<std::string> configs = findFilesByExtension(
-                (fs::path("config") / "orogen").string(), ".yml");
-    taskConfigurations.initialize(configs);
+    if(loadTaskConfigs){
+        std::clog << "Loading task configuration files from bundle" << std::endl;
+        loadTaskConfigurations();
+    }
     std::clog << "Bundles successfully initialized" << std::endl;
 
     return true;
@@ -459,6 +466,12 @@ std::string Bundle::findBundle(const std::string &bundle_name)
 }
 
 
+TaskConfigurations::TaskConfigurations()
+    : initialized(false)
+{
+
+}
+
 void TaskConfigurations::initialize(const std::vector<std::string> &configFiles)
 {
     taskConfigurations.clear();
@@ -483,11 +496,15 @@ void TaskConfigurations::initialize(const std::vector<std::string> &configFiles)
             taskConfigurations.at(task).mergeConfigFile(cfgFile);
         }
     }
+    initialized = true;
 }
 
 Configuration TaskConfigurations::getConfig(const std::string &taskModelName,
                                             const std::vector<std::string> &sections)
 {
+    if(!initialized){
+        throw std::runtime_error("TaskConfiguration::getConfig was called, but TaskConfiguratuion was not initilized.");
+    }
     MultiSectionConfiguration& mcfg = taskConfigurations.at(taskModelName);
     Configuration cfg = mcfg.getConfig(sections);
     return cfg;
@@ -495,5 +512,8 @@ Configuration TaskConfigurations::getConfig(const std::string &taskModelName,
 
 const MultiSectionConfiguration &TaskConfigurations::getMultiConfig(const std::string &taskModelName)
 {
+    if(!initialized){
+        throw std::runtime_error("TaskConfiguration::getMultiConfig was called, but TaskConfiguratuion was not initilized.");
+    }
     return taskConfigurations.at(taskModelName);
 }

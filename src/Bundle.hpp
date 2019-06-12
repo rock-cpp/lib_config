@@ -42,11 +42,12 @@ public:
 
 class TaskConfigurations{
 private:
-    //Contains the merged configuration files from all bundles. The string
-    //ist the task model name
+    //Contains the merged configuration files from all bundles. The key-string
+    //is the task model name
     std::map<std::string, MultiSectionConfiguration> taskConfigurations;
+    bool initialized;
 public:
-    TaskConfigurations(){}
+    TaskConfigurations();
     void initialize(const std::vector<std::string>& configFiles);
     Configuration getConfig(const std::string& taskModelName,
                             const std::vector<std::string>& sections);
@@ -95,7 +96,28 @@ public:
      */
     static void deleteInstance();
 
-    bool initialize();
+    /**
+     * @brief Loads task configuration files from the selected bundles into
+     * memory
+     */
+    void loadTaskConfigurations();
+
+    /**
+     * @brief Initializes the bundle
+     * Evaluates ROCK_BUNDLE and ROCK_BUNDLE_PATH evironment variables to
+     * determine burrently active bundle.
+     *    ROCK_BUNDLE: defines the selected bundle.
+     *    ROCK_BUNDLE_PATH: Defines the search path where to look for bundles
+     * References to other bundles can be specified in config/bundle.yml file
+     * in the selected bundle.
+
+     * @param loadTaskConfigs: Specifiy if task configuration files
+     * should be loaded. This step is costly and thus can be omitted if
+     * task configuration files are not needed.
+     * @return true or false representing wether initialization was successful
+     * or not
+     */
+    bool initialize(bool loadTaskConfigs=true);
 
     const std::string &getActiveBundleName();
 

@@ -199,6 +199,16 @@ BOOST_AUTO_TEST_CASE(task_configuration)
     inst.deleteInstance();
 }
 
+BOOST_AUTO_TEST_CASE(init_without_task_configuration)
+{
+    clear_environment_variables();
+    setenv("ROCK_BUNDLE_PATH", bundle_path.c_str(), 1);
+    setenv("ROCK_BUNDLE", "first", 1);
+    libConfig::Bundle bundle;
+    bundle.initialize(false);
+    BOOST_CHECK_THROW(bundle.taskConfigurations.getConfig("my::Task", {"default"}), std::runtime_error);
+}
+
 BOOST_AUTO_TEST_CASE(still_working_without_bundle_selected)
 {
     clear_environment_variables();
