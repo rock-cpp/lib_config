@@ -133,6 +133,11 @@ SimpleConfigValue::SimpleConfigValue(const std::string &v): ConfigValue(SIMPLE),
 
 }
 
+SimpleConfigValue::SimpleConfigValue(): ConfigValue(SIMPLE), value("")
+{
+
+}
+
 SimpleConfigValue::~SimpleConfigValue()
 {
 

@@ -180,7 +180,7 @@ void YAMLConfigParser::displayMap(const YAML::Node &map, int level)
     
 }
 
-bool YAMLConfigParser::parseAndInsert(const std::string& configName, const std::string& ymlString, const std::string &pathStr, std::map< std::string, Configuration >& subConfigs)
+bool YAMLConfigParser::parseAndInsert(const std::string& configName, const std::string& ymlString, std::map< std::string, Configuration >& subConfigs)
 {
     std::string afterInsertion = applyStringVariableInsertions(ymlString);
 
@@ -191,7 +191,7 @@ bool YAMLConfigParser::parseAndInsert(const std::string& configName, const std::
             return false;
     } catch (std::runtime_error &e)
     {
-        std::cout << "Error loading sub config << '" << configName << "' of file " << pathStr << std::endl << "    " << e.what() << std::endl;
+        std::cout << "Error loading sub config << '" << configName << std::endl << "    " << e.what() << std::endl;
         std::cout << "YML of subconfig was :"  << std::endl << afterInsertion << std::endl;
         return false;
     }
@@ -202,41 +202,54 @@ bool YAMLConfigParser::parseAndInsert(const std::string& configName, const std::
 
 bool YAMLConfigParser::loadConfigFile(const std::string& pathStr, std::map<std::string, Configuration> &subConfigs)
 {
-    subConfigs.clear();
     using namespace boost::filesystem;
-    
     path path(pathStr);
-
     if(!exists(path))
     {
         throw std::runtime_error(std::string("Error, could not find config file ") + path.c_str());
     }
 
-    //as this is non standard yml, we need to load and parse the config file first
     std::ifstream fin(path.c_str());
+    bool st = loadConfig(fin, subConfigs);
+    fin.close();
+    return st;
+}
+
+bool libConfig::YAMLConfigParser::loadConfigString(const std::string &yamlstring, std::map<std::string, libConfig::Configuration> &subConfigs)
+{
+    std::istringstream ss;
+    ss.str(yamlstring);
+    return loadConfig(ss, subConfigs);
+}
+template <typename T>
+bool libConfig::YAMLConfigParser::loadConfig(T &stream, std::map<std::string, libConfig::Configuration> &subConfigs)
+{
+    subConfigs.clear();
+
+    //as this is non standard yml, we need to load and parse the config file first
     std::string line;
-    
+
     std::string buffer;
-    
+
     std::string configName;
-    
-    while(std::getline(fin, line))
+
+    while(std::getline(stream, line))
     {
         if(line.size() >= 3 && line.at(0) == '-'  && line.at(1) == '-'  && line.at(2) == '-' )
         {
             //found new subsection
 //             std::cout << "found subsection " << line << std::endl;
-            
+
             std::string searched("--- name:");
             if(!line.compare(0, searched.size(), searched))
             {
                 if(!configName.empty())
                 {
-                    if(!parseAndInsert(configName, buffer, pathStr, subConfigs))
+                    if(!parseAndInsert(configName, buffer, subConfigs))
                         return false;
                     buffer.clear();
                 }
-                
+
                 configName = line.substr(searched.size(), line.size());
 
 //                 std::cout << "Found new configuration " << curConfig.name << std::endl;
@@ -253,10 +266,10 @@ bool YAMLConfigParser::loadConfigFile(const std::string& pathStr, std::map<std::
             buffer.append("\n");
         }
     }
-    
+
     if(!configName.empty())
     {
-        if(!parseAndInsert(configName, buffer, pathStr, subConfigs))
+        if(!parseAndInsert(configName, buffer, subConfigs))
             return false;
     }
 
@@ -265,7 +278,7 @@ bool YAMLConfigParser::loadConfigFile(const std::string& pathStr, std::map<std::
 //         std::cout << "Cur conf \"" << it->first << "\"" << std::endl;
 //         displayConfiguration(it->second);
 //     }
-    
+
     return true;
 }
 

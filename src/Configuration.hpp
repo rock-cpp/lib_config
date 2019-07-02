@@ -44,6 +44,7 @@ class SimpleConfigValue : public ConfigValue
 {
 public:
     SimpleConfigValue(const std::string &value);
+    SimpleConfigValue();
     virtual ~SimpleConfigValue();
     virtual void print(std::ostream &stream, int level = 0) const;
     virtual bool merge(std::shared_ptr<ConfigValue> other);

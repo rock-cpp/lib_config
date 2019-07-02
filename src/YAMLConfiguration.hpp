@@ -2,11 +2,12 @@
 
 #include "Configuration.hpp"
 #include <yaml-cpp/yaml.h>
+#include <istream>
 
 namespace libConfig
 {
 class YAMLConfigParser {
-    bool parseAndInsert(const std::string& configName, const std::string& ymlString, const std::string &pathStr, std::map< std::string, Configuration >& subConfigs);
+    bool parseAndInsert(const std::string& configName, const std::string& ymlString, std::map< std::string, Configuration >& subConfigs);
 public:
     void displayMap(const YAML::Node &map, int level = 0);
 
@@ -21,6 +22,9 @@ public:
     bool insetMapIntoArray(const YAML::Node &map, Configuration &conf);
     
     bool loadConfigFile(const std::string &path, std::map<std::string, Configuration> &subConfigs);
+    bool loadConfigString(const std::string &yamlstring, std::map<std::string, Configuration> &subConfigs);
+    template <typename T>
+    bool loadConfig(T& stream, std::map<std::string, Configuration> &subConfigs);
     
     bool parseYAML(Configuration &curConfig, const std::string &yamlBuffer);
 
