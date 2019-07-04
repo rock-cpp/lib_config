@@ -505,9 +505,8 @@ Configuration TaskConfigurations::getConfig(const std::string &taskModelName,
     if(!initialized){
         throw std::runtime_error("TaskConfiguration::getConfig was called, but TaskConfiguration was not initialized.");
     }
-    MultiSectionConfiguration& mcfg = taskConfigurations.at(taskModelName);
-    Configuration cfg = mcfg.getConfig(sections);
-    return cfg;
+    
+    return getMultiConfig( taskModelName ).getConfig( sections );
 }
 
 const MultiSectionConfiguration &TaskConfigurations::getMultiConfig(const std::string &taskModelName) const
@@ -515,5 +514,10 @@ const MultiSectionConfiguration &TaskConfigurations::getMultiConfig(const std::s
     if(!initialized){
         throw std::runtime_error("TaskConfiguration::getMultiConfig was called, but TaskConfiguratuion was not initilized.");
     }
+    
+    if ( taskConfigurations.count(taskModelName) == 0 ) {
+        throw std::out_of_range("No task configuration for task model name " + taskModelName + " found.");
+    }
+    
     return taskConfigurations.at(taskModelName);
 }
