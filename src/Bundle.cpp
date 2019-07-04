@@ -503,7 +503,7 @@ Configuration TaskConfigurations::getConfig(const std::string &taskModelName,
                                             const std::vector<std::string> &sections) const
 {
     if(!initialized){
-        throw std::runtime_error("TaskConfiguration::getConfig was called, but TaskConfiguratuion was not initilized.");
+        throw std::runtime_error("TaskConfiguration::getConfig was called, but TaskConfiguration was not initialized.");
     }
     MultiSectionConfiguration& mcfg = taskConfigurations.at(taskModelName);
     Configuration cfg = mcfg.getConfig(sections);
