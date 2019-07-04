@@ -109,7 +109,7 @@ public:
     //Sections should be sorted with increasing priority.
     //e.g. [default,specific,more_specific]
     //here default has lowest and more_specific highest priority
-    Configuration getConfig(const std::vector<std::string> &sections);
+    Configuration getConfig(const std::vector<std::string> &sections) const;
     bool mergeConfigFile(const MultiSectionConfiguration& lowerPriorityFile);
     std::string taskModelName;
     const std::map<std::string, Configuration>& getSubsections();

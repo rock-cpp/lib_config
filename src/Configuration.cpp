@@ -317,7 +317,7 @@ bool MultiSectionConfiguration::load(std::string filepath)
 }
 
 Configuration MultiSectionConfiguration::getConfig(
-        const std::vector<std::string>& sections)
+        const std::vector<std::string>& sections) const
 {
     std::string mergedConfigName;
     bool first = true;

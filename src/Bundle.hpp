@@ -49,9 +49,9 @@ private:
 public:
     TaskConfigurations();
     void initialize(const std::vector<std::string>& configFiles);
-    Configuration getConfig(const std::string& taskModelName,
-                            const std::vector<std::string>& sections);
-    const MultiSectionConfiguration& getMultiConfig(const std::string& taskModelName);
+    Configuration getConfig (const std::string& taskModelName,
+                            const std::vector<std::string>& sections) const;
+    const MultiSectionConfiguration& getMultiConfig(const std::string& taskModelName) const;
 };
 
 // Represents a bundle with all its bundles it depends on
