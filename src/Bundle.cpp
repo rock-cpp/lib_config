@@ -500,7 +500,7 @@ void TaskConfigurations::initialize(const std::vector<std::string> &configFiles)
 }
 
 Configuration TaskConfigurations::getConfig(const std::string &taskModelName,
-                                            const std::vector<std::string> &sections)
+                                            const std::vector<std::string> &sections) const
 {
     if(!initialized){
         throw std::runtime_error("TaskConfiguration::getConfig was called, but TaskConfiguratuion was not initilized.");
@@ -510,7 +510,7 @@ Configuration TaskConfigurations::getConfig(const std::string &taskModelName,
     return cfg;
 }
 
-const MultiSectionConfiguration &TaskConfigurations::getMultiConfig(const std::string &taskModelName)
+const MultiSectionConfiguration &TaskConfigurations::getMultiConfig(const std::string &taskModelName) const
 {
     if(!initialized){
         throw std::runtime_error("TaskConfiguration::getMultiConfig was called, but TaskConfiguratuion was not initilized.");
