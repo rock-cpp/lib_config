@@ -515,9 +515,11 @@ const MultiSectionConfiguration &TaskConfigurations::getMultiConfig(const std::s
         throw std::runtime_error("TaskConfiguration::getMultiConfig was called, but TaskConfiguratuion was not initilized.");
     }
     
-    if ( taskConfigurations.count(taskModelName) == 0 ) {
+    auto cfgIt = taskConfigurations.find( taskModelName );
+    
+    if ( cfgIt == taskConfigurations.end() ) {
         throw std::out_of_range("No task configuration for task model name " + taskModelName + " found.");
     }
     
-    return taskConfigurations.at(taskModelName);
+    return cfgIt->second;
 }
