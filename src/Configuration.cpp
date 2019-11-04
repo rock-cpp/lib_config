@@ -308,10 +308,9 @@ bool MultiSectionConfiguration::load(std::string filepath)
     try{
         parser.loadConfigFile(filepath, this->subsections);
     }catch(std::runtime_error &e){
-        std::cerr << "Error loaded configuration file " << filepath <<
+        std::cerr << "Error loading configuration file " << filepath <<
                      std::endl;
-        throw std::runtime_error("Failed to load configuration file " +
-                                 filepath);
+        throw e;
     }
     return true;
 }
