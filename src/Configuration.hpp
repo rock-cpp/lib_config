@@ -105,7 +105,13 @@ class MultiSectionConfiguration
 {
 public:
     MultiSectionConfiguration();
+    //This funciton is DEPRECATED. Don't use it anymore. Use loadFromBundle or
+    //loadNoBundle instead
     bool load(std::string filepath);
+    //Task Model is extracted from file name pattern used in bundle
+    //example: camera_usb::Task.yml
+    bool loadFromBundle(std::string filepath);
+    bool loadNoBundle(std::string filepath, std::string taskModelName="");
     //Sections should be sorted with increasing priority.
     //e.g. [default,specific,more_specific]
     //here default has lowest and more_specific highest priority

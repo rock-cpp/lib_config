@@ -296,14 +296,25 @@ MultiSectionConfiguration::MultiSectionConfiguration()
 
 bool MultiSectionConfiguration::load(std::string filepath)
 {
+    return loadFromBundle(filepath);
+}
+
+bool MultiSectionConfiguration::loadFromBundle(std::string filepath)
+{
     taskModelName = fs::path(filepath).stem().string();
     if(taskModelName.find("::") == std::string::npos){
-        std::clog << "File " << taskModelName << "does not appear to be a oroGen" <<
+        std::clog << "File " << taskModelName << " does not appear to be a oroGen " <<
                      "configuration file." << std::endl;
         taskModelName = "";
         return false;
     }
 
+    return loadNoBundle(filepath, taskModelName);
+}
+
+bool MultiSectionConfiguration::loadNoBundle(std::string filepath, std::string taskModelName)
+{
+    this->taskModelName = taskModelName;
     libConfig::YAMLConfigParser parser;
     try{
         parser.loadConfigFile(filepath, this->subsections);

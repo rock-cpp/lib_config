@@ -480,7 +480,7 @@ void TaskConfigurations::initialize(const std::vector<std::string> &configFiles)
     {
         MultiSectionConfiguration cfgFile;
         std::clog << "Loading config file " << cfgFilePath <<std::endl;
-        bool st = cfgFile.load(cfgFilePath);
+        bool st = cfgFile.loadFromBundle(cfgFilePath);
         if(!st){
             std::clog << "File " << cfgFilePath << " could not be parsed" << std::endl;
             continue;
