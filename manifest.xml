@@ -6,6 +6,7 @@
   <license></license>
   <url>http://</url>
   <logo>http://</logo>
+  <tags>needs_opt</tags>
   <depend package="base/cmake" />
   <depend package="base/types" />
   <depend package="yaml-cpp" />
