@@ -22,6 +22,9 @@ public:
     //replace values specified in this
     virtual bool merge(std::shared_ptr<ConfigValue> other) = 0;
     
+    // returns a deep copy of the object
+    virtual std::shared_ptr<ConfigValue> clone() = 0;
+
     const std::string &getName() const;
     const Type &getType() const;
     
@@ -48,6 +51,7 @@ public:
     virtual ~SimpleConfigValue();
     virtual void print(std::ostream &stream, int level = 0) const;
     virtual bool merge(std::shared_ptr<ConfigValue> other);
+    virtual std::shared_ptr<ConfigValue> clone();
     
     const std::string &getValue() const;
 private:
@@ -61,6 +65,7 @@ public:
     virtual ~ComplexConfigValue();
     virtual void print(std::ostream &stream, int level = 0) const;
     virtual bool merge(std::shared_ptr<ConfigValue> other);
+    virtual std::shared_ptr<ConfigValue> clone();
     const std::map<std::string, std::shared_ptr<ConfigValue>> &getValues() const;
     void addValue(const std::string &name, std::shared_ptr<ConfigValue> value);
 private:
@@ -74,6 +79,7 @@ public:
     virtual ~ArrayConfigValue();
     virtual void print(std::ostream &stream, int level = 0) const;
     virtual bool merge(std::shared_ptr<ConfigValue> other);
+    virtual std::shared_ptr<ConfigValue> clone();
     const std::vector<std::shared_ptr<ConfigValue> > getValues() const;
     void addValue(std::shared_ptr<ConfigValue> value);
 private:

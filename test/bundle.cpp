@@ -199,6 +199,39 @@ BOOST_AUTO_TEST_CASE(task_configuration)
     inst.deleteInstance();
 }
 
+BOOST_AUTO_TEST_CASE(merge_task_configuration)
+{
+    clear_environment_variables();
+    setenv("ROCK_BUNDLE_PATH", bundle_path.c_str(), 1);
+    setenv("ROCK_BUNDLE", "fourth", 1);
+    libConfig::Bundle& inst = libConfig::Bundle::getInstance();
+
+    libConfig::MultiSectionConfiguration mcfg = inst.taskConfigurations.getMultiConfig("my::Task");
+    BOOST_CHECK_EQUAL(mcfg.getSubsections().size(), 3);
+
+    // load default config
+    libConfig::Configuration default_cfg = inst.taskConfigurations.getConfig(
+                "my::Task", {"default"});
+    std::shared_ptr<const libConfig::SimpleConfigValue> name_value
+        = std::dynamic_pointer_cast<const libConfig::SimpleConfigValue>(default_cfg.getValues().at("name"));
+    // this should contain the default value
+    BOOST_CHECK_EQUAL(name_value->getValue(), "defaultname");
+
+    // load default and specialized config
+    libConfig::Configuration specialized_cfg = inst.taskConfigurations.getConfig(
+                "my::Task", {"default", "specialized"});
+    name_value = std::dynamic_pointer_cast<const libConfig::SimpleConfigValue>(specialized_cfg.getValues().at("name"));
+    // this should contain the specialized value
+    BOOST_CHECK_EQUAL(name_value->getValue(), "fourth");
+
+    // load default config a second time
+    libConfig::Configuration default_cfg_2 = inst.taskConfigurations.getConfig(
+                "my::Task", {"default"});
+    name_value = std::dynamic_pointer_cast<const libConfig::SimpleConfigValue>(default_cfg_2.getValues().at("name"));
+    // this should still contain the default value
+    BOOST_CHECK_EQUAL(name_value->getValue(), "defaultname");
+}
+
 BOOST_AUTO_TEST_CASE(init_without_task_configuration)
 {
     clear_environment_variables();

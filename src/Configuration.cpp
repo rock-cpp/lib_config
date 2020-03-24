@@ -50,12 +50,24 @@ bool ComplexConfigValue::merge(std::shared_ptr<ConfigValue> other)
         }
         else
         {
-            values.insert(it);
+            values.insert(std::make_pair(it.first, it.second->clone()));
         }
     }    
     return true;
 }
 
+std::shared_ptr<ConfigValue> ComplexConfigValue::clone()
+{
+    ComplexConfigValue* copy = new ComplexConfigValue();
+    copy->type = type;
+    copy->name = name;
+    copy->cxxTypeName = cxxTypeName;
+    for(const auto &it : values)
+    {
+        copy->values.insert(std::make_pair(it.first, it.second->clone()));
+    }
+    return std::shared_ptr<ConfigValue>(copy);
+}
 
 void ComplexConfigValue::addValue(const std::string &name, std::shared_ptr<ConfigValue> value)
 {
@@ -116,15 +128,28 @@ bool ArrayConfigValue::merge(std::shared_ptr< ConfigValue > other)
     {
         if(i < values.size())
         {
-            values[i] = aother->values[i];
+            values[i] = aother->values[i]->clone();
         }
         else
         {
-            values.push_back(aother->values[i]);
+            values.push_back(aother->values[i]->clone());
         }
     }
     
     return true;
+}
+
+std::shared_ptr<ConfigValue> ArrayConfigValue::clone()
+{
+    ArrayConfigValue* copy = new ArrayConfigValue();
+    copy->type = type;
+    copy->name = name;
+    copy->cxxTypeName = cxxTypeName;
+    for(const auto& entry : values)
+    {
+        copy->values.push_back(entry->clone());
+    }
+    return std::shared_ptr<ConfigValue>(copy);
 }
 
 
@@ -169,6 +194,15 @@ bool SimpleConfigValue::merge(const std::shared_ptr< ConfigValue > other)
     value = sother->value;
     
     return true;
+}
+
+std::shared_ptr<ConfigValue> SimpleConfigValue::clone()
+{
+    SimpleConfigValue* copy = new SimpleConfigValue(value);
+    copy->type = type;
+    copy->name = name;
+    copy->cxxTypeName = cxxTypeName;
+    return std::shared_ptr<ConfigValue>(copy);
 }
 
 ConfigValue::ConfigValue(Type t) : type(t)
@@ -282,7 +316,7 @@ bool Configuration::merge(const Configuration& other)
         }
         else
         {
-            values.insert(*it);
+            values.insert(std::make_pair(it->first, it->second->clone()));
         }
     }
     
