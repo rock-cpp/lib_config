@@ -5,6 +5,6 @@ find_package(Rock)
 SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -std=c++11" )
 
 rock_init(lib_config 0.1)
-rock_standard_layout()
 include_directories(src)
+rock_standard_layout()
 
