@@ -8,4 +8,3 @@ rock_init(lib_config 0.1)
 rock_standard_layout()
 include_directories(src)
 
-add_subdirectory(bindings)

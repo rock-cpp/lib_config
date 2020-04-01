@@ -1,3 +1,4 @@
+FIND_PACKAGE(PythonInterp 3)
 
 if (PYTHONINTERP_FOUND)
   if (UNIX AND NOT APPLE)
