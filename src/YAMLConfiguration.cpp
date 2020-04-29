@@ -224,8 +224,6 @@ bool libConfig::YAMLConfigParser::loadConfigString(const std::string &yamlstring
 template <typename T>
 bool libConfig::YAMLConfigParser::loadConfig(T &stream, std::map<std::string, libConfig::Configuration> &subConfigs)
 {
-    subConfigs.clear();
-
     //as this is non standard yml, we need to load and parse the config file first
     std::string line;
 
