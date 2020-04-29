@@ -83,7 +83,7 @@ std::shared_ptr< ConfigValue > TypelibConfiguration::getFromNumeric(Typelib::Val
                     valueS = getValue<int64_t>(value);               
                     break;
                 default:
-                    std::cout << "Error, got integer of unexpected size " << numeric.getSize() << std::endl;
+                    std::cerr << "Error, got integer of unexpected size " << numeric.getSize() << std::endl;
                     throw std::runtime_error("got integer of unexpected size " + numeric.getSize());
                     break;
             }
@@ -105,7 +105,7 @@ std::shared_ptr< ConfigValue > TypelibConfiguration::getFromNumeric(Typelib::Val
                     valueS = getValue<uint64_t>(value);               
                     break;
                 default:
-                    std::cout << "Error, got integer of unexpected size " << numeric.getSize() << std::endl;
+                    std::cerr << "Error, got integer of unexpected size " << numeric.getSize() << std::endl;
                     throw std::runtime_error("got integer of unexpected size " + numeric.getSize());
                     break;
             }
