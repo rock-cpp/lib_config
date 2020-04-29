@@ -10,23 +10,23 @@ using namespace libConfig;
 void YAMLConfigParser::printNode(const YAML::Node &node, int level)
 {
     for(int i = 0; i < level; i++)
-        std::cout << "  ";
+        std::clog << "  ";
 
     switch(node.Type())
     {
         case YAML::NodeType::Undefined:
-            std::cout << "a Undefined Node" << std::endl;
+            std::clog << "a Undefined Node" << std::endl;
             break;
         case YAML::NodeType::Scalar:
         {
-            std::cout << "a Scalar: "<< node.as<std::string>() << std::endl;
+            std::clog << "a Scalar: "<< node.as<std::string>() << std::endl;
         }
             break;
         case YAML::NodeType::Sequence:
-            std::cout << "a Sequence: " << node.Tag() << std::endl;
+            std::clog << "a Sequence: " << node.Tag() << std::endl;
             break;
         case YAML::NodeType::Map:
-            std::cout << "a Map: " << node.Tag() << std::endl;
+            std::clog << "a Map: " << node.Tag() << std::endl;
             displayMap(node, level + 1);
             break;
         case YAML::NodeType::Null:
@@ -39,12 +39,11 @@ bool YAMLConfigParser::insetMapIntoArray(const YAML::Node& map, ComplexConfigVal
     for(const auto &it : map)
     {
         std::string memberName = it.first.as<std::string>();
-//         std::cout << "Name : " << memberName << std::endl;
         std::shared_ptr<ConfigValue> val = getConfigValue(it.second);
         
         if(!val)
         {
-            std::cout << "Warning, could not get config value for " << memberName << std::endl;
+            std::clog << "Warning, could not get config value for " << memberName << std::endl;
             continue;
         }
         
@@ -61,12 +60,11 @@ bool YAMLConfigParser::insetMapIntoArray(const YAML::Node &map, ArrayConfigValue
     for(const auto &it : map)
     {
         std::string memberName = it.first.as<std::string>();
-//         std::cout << "Name : " << memberName << std::endl;
         std::shared_ptr<ConfigValue> val = getConfigValue(it.second);
         
         if(!val)
         {
-            std::cout << "Warning, could not get config value for " << memberName << std::endl;
+            std::clog << "Warning, could not get config value for " << memberName << std::endl;
             continue;
         }
         
@@ -82,12 +80,11 @@ bool YAMLConfigParser::insetMapIntoArray(const YAML::Node& map, Configuration& c
     for(const auto &it : map)
     {
         std::string memberName = it.first.as<std::string>();
-//         std::cout << "Name : " << memberName << std::endl;
         std::shared_ptr<ConfigValue> val = getConfigValue(it.second);
         
         if(!val)
         {
-            std::cout << "Warning, could not get config value for " << memberName << std::endl;
+            std::clog << "Warning, could not get config value for " << memberName << std::endl;
             continue;
         }
         
@@ -115,7 +112,6 @@ std::shared_ptr<ConfigValue> YAMLConfigParser::getConfigValue(const YAML::Node &
         }
             break;
         case YAML::NodeType::Sequence:
-//             std::cout << "a Sequence: " << node.Tag() << std::endl;
             {
                 std::shared_ptr<ArrayConfigValue> values = std::make_shared<ArrayConfigValue>();
                 for(const auto it : node)
@@ -129,7 +125,6 @@ std::shared_ptr<ConfigValue> YAMLConfigParser::getConfigValue(const YAML::Node &
             break;
         case YAML::NodeType::Map:
         {
-//             std::cout << "a Map: " << node.Tag() << std::endl;
             std::shared_ptr<ComplexConfigValue> mapValue = std::make_shared<ComplexConfigValue>();
             if(!insetMapIntoArray(node, *mapValue))
             {
@@ -139,10 +134,10 @@ std::shared_ptr<ConfigValue> YAMLConfigParser::getConfigValue(const YAML::Node &
             break;
         }
         case YAML::NodeType::Undefined:
-            std::cout << "Undefined" << std::endl;
+            std::clog << "Undefined" << std::endl;
             break;
         case YAML::NodeType::Null:
-            std::cout << "NULL" << std::endl;
+            std::clog << "NULL" << std::endl;
             break;
     }
     return nullptr;
@@ -171,10 +166,10 @@ void YAMLConfigParser::displayMap(const YAML::Node &map, int level)
     for(const auto &it : map)
     {
         for(int i = 0; i < level; i++)
-            std::cout << "  ";
+            std::clog << "  ";
         
         std::string value = it.first.as<std::string>();
-        std::cout << "Value of first " << value << std::endl;
+        std::clog << "Value of first " << value << std::endl;
         printNode(it.second, level + 1);
     }
     
@@ -191,8 +186,8 @@ bool YAMLConfigParser::parseAndInsert(const std::string& configName, const std::
             return false;
     } catch (std::runtime_error &e)
     {
-        std::cout << "Error loading sub config << '" << configName << std::endl << "    " << e.what() << std::endl;
-        std::cout << "YML of subconfig was :"  << std::endl << afterInsertion << std::endl;
+        std::cerr << "Error loading sub config << '" << configName << std::endl << "    " << e.what() << std::endl;
+        std::cerr << "YML of subconfig was :"  << std::endl << afterInsertion << std::endl;
         return false;
     }
     subConfigs.insert(std::make_pair(config.getName(), config));
@@ -236,8 +231,6 @@ bool libConfig::YAMLConfigParser::loadConfig(T &stream, std::map<std::string, li
         if(line.size() >= 3 && line.at(0) == '-'  && line.at(1) == '-'  && line.at(2) == '-' )
         {
             //found new subsection
-//             std::cout << "found subsection " << line << std::endl;
-
             std::string searched("--- name:");
             if(!line.compare(0, searched.size(), searched))
             {
@@ -249,11 +242,9 @@ bool libConfig::YAMLConfigParser::loadConfig(T &stream, std::map<std::string, li
                 }
 
                 configName = line.substr(searched.size(), line.size());
-
-//                 std::cout << "Found new configuration " << curConfig.name << std::endl;
             } else
             {
-                std::cout << "Error, sections must begin with '--- name:<SectionName>'" << std::endl;
+                std::cerr << "Error, sections must begin with '--- name:<SectionName>'" << std::endl;
                 return false;
             }
 
@@ -270,13 +261,6 @@ bool libConfig::YAMLConfigParser::loadConfig(T &stream, std::map<std::string, li
         if(!parseAndInsert(configName, buffer, subConfigs))
             return false;
     }
-
-//     for(std::map<std::string, Configuration>::const_iterator it = subConfigs.begin(); it != subConfigs.end(); it++)
-//     {
-//         std::cout << "Cur conf \"" << it->first << "\"" << std::endl;
-//         displayConfiguration(it->second);
-//     }
-
     return true;
 }
 
@@ -288,7 +272,7 @@ bool YAMLConfigParser::parseYAML(Configuration& curConfig, const std::string& ya
     {
         if(doc.Type() != YAML::NodeType::Map)
         {
-            std::cout << "Error, configurations section should only contain yml maps" << std::endl;
+            std::cerr << "Error, configurations section should only contain yml maps" << std::endl;
             return false;
         }
         
@@ -296,7 +280,7 @@ bool YAMLConfigParser::parseYAML(Configuration& curConfig, const std::string& ya
         {
             if(!insetMapIntoArray(doc, curConfig))
             {
-                std::cout << "Warning, could not parse config" << std::endl;
+                std::clog << "Warning, could not parse config" << std::endl;
             }
         }
     }

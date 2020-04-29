@@ -299,7 +299,7 @@ bool Configuration::fillFromYaml(const std::string& yml)
     {}
     
     if(!ret)
-        std::cout << "Modified YML is " << std::endl << afterInsertion << std::endl;
+        std::clog << "Modified YML is " << std::endl << afterInsertion << std::endl;
     return ret;
 }
 
