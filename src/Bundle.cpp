@@ -468,7 +468,6 @@ std::string Bundle::findBundle(const std::string &bundle_name)
 
 
 TaskConfigurations::TaskConfigurations()
-    : initialized(false)
 {
 
 }
@@ -480,10 +479,10 @@ void TaskConfigurations::initialize(const std::vector<std::string> &configFiles)
     for(const std::string& cfgFilePath : configFiles)
     {
         MultiSectionConfiguration cfgFile;
-        std::clog << "Loading config file " << cfgFilePath <<std::endl;
+        LOG_DEBUG_S << "Loading config file " << cfgFilePath;
         bool st = cfgFile.loadFromBundle(cfgFilePath);
         if(!st){
-            std::clog << "File " << cfgFilePath << " could not be parsed" << std::endl;
+            LOG_WARN_S << "File " << cfgFilePath << " could not be parsed";
             continue;
         }
         std::string& task = cfgFile.taskModelName;
@@ -497,25 +496,17 @@ void TaskConfigurations::initialize(const std::vector<std::string> &configFiles)
             taskConfigurations.at(task).mergeConfigFile(cfgFile);
         }
     }
-    initialized = true;
 }
 
 Configuration TaskConfigurations::getConfig(const std::string &taskModelName,
                                             const std::vector<std::string> &sections) const
 {
-    if(!initialized){
-        throw std::runtime_error("TaskConfiguration::getConfig was called, but TaskConfiguration was not initialized.");
-    }
-    
     return getMultiConfig( taskModelName ).getConfig( sections );
 }
 
 const MultiSectionConfiguration &TaskConfigurations::getMultiConfig(const std::string &taskModelName) const
 {
-    if(!initialized){
-        throw std::runtime_error("TaskConfiguration::getMultiConfig was called, but TaskConfiguratuion was not initilized.");
-    }
-    
+
     auto cfgIt = taskConfigurations.find( taskModelName );
     
     if ( cfgIt == taskConfigurations.end() ) {

@@ -45,7 +45,6 @@ private:
     //Contains the merged configuration files from all bundles. The key-string
     //is the task model name
     std::map<std::string, MultiSectionConfiguration> taskConfigurations;
-    bool initialized;
 public:
     TaskConfigurations();
     void initialize(const std::vector<std::string>& configFiles);
