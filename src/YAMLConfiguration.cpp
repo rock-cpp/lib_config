@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include "Bundle.hpp"
+#include <base-logging/Logging.hpp>
 
 using namespace libConfig;
 
@@ -44,7 +45,7 @@ bool YAMLConfigParser::insetMapIntoArray(const YAML::Node& map, ComplexConfigVal
         
         if(!val)
         {
-            std::cout << "Warning, could not get config value for " << memberName << std::endl;
+            LOG_WARN_S << "Could not get config value for " << memberName;
             continue;
         }
         
@@ -66,7 +67,7 @@ bool YAMLConfigParser::insetMapIntoArray(const YAML::Node &map, ArrayConfigValue
         
         if(!val)
         {
-            std::cout << "Warning, could not get config value for " << memberName << std::endl;
+            LOG_WARN_S << "Could not get config value for " << memberName;
             continue;
         }
         
@@ -87,7 +88,7 @@ bool YAMLConfigParser::insetMapIntoArray(const YAML::Node& map, Configuration& c
         
         if(!val)
         {
-            std::cout << "Warning, could not get config value for " << memberName << std::endl;
+            LOG_WARN_S << "Could not get config value for " << memberName;
             continue;
         }
         
@@ -191,8 +192,8 @@ bool YAMLConfigParser::parseAndInsert(const std::string& configName, const std::
             return false;
     } catch (std::runtime_error &e)
     {
-        std::cout << "Error loading sub config << '" << configName << std::endl << "    " << e.what() << std::endl;
-        std::cout << "YML of subconfig was :"  << std::endl << afterInsertion << std::endl;
+        LOG_ERROR_S << "Error loading sub config << '" << configName << std::endl << "    " << e.what();
+        LOG_ERROR_S << "YML of subconfig was :"  << std::endl << afterInsertion;
         return false;
     }
     subConfigs.insert(std::make_pair(config.getName(), config));
@@ -255,7 +256,7 @@ bool libConfig::YAMLConfigParser::loadConfig(T &stream, std::map<std::string, li
 //                 std::cout << "Found new configuration " << curConfig.name << std::endl;
             } else
             {
-                std::cout << "Error, sections must begin with '--- name:<SectionName>'" << std::endl;
+                LOG_ERROR_S << "Sections must begin with '--- name:<SectionName>'";
                 return false;
             }
 
@@ -290,7 +291,7 @@ bool YAMLConfigParser::parseYAML(Configuration& curConfig, const std::string& ya
     {
         if(doc.Type() != YAML::NodeType::Map)
         {
-            std::cout << "Error, configurations section should only contain yml maps" << std::endl;
+            LOG_ERROR_S << "Configurations section should only contain yml maps";
             return false;
         }
         
@@ -298,7 +299,7 @@ bool YAMLConfigParser::parseYAML(Configuration& curConfig, const std::string& ya
         {
             if(!insetMapIntoArray(doc, curConfig))
             {
-                std::cout << "Warning, could not parse config" << std::endl;
+                LOG_WARN_S << "Could not parse config";
             }
         }
     }

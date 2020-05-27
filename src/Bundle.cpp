@@ -8,6 +8,7 @@
 #include <base/Time.hpp>
 #include <yaml-cpp/yaml.h>
 #include "YAMLConfiguration.hpp"
+#include <base-logging/Logging.hpp>
 
 
 namespace fs = boost::filesystem;
@@ -213,9 +214,9 @@ void Bundle::loadTaskConfigurations()
 
 bool Bundle::initialize(bool loadTaskConfigs)
 {
-    std::clog << "Initializing Bundles" << std::endl;
+    LOG_DEBUG_S << "Initializing Bundles";
     activeBundles.clear();
-    std::clog << "Determining selected bundle" << std::endl;
+    LOG_DEBUG_S << "Determining selected bundle";
     //Read environment variables:
     //  ROCK_BUNDLE: contains currently selected bundle (name or absolute path)
     //  ROCK_BUNDLE_PATH: contains search paths, where to look for a bundle.
@@ -223,8 +224,7 @@ bool Bundle::initialize(bool loadTaskConfigs)
     const char *activeBundleC = getenv("ROCK_BUNDLE");
     if(!activeBundleC)
     {
-        std::cerr << "ROCK_BUNDLE not set. Bundle cannot be initialized." <<
-                     std::endl;
+        LOG_ERROR_S << "ROCK_BUNDLE not set. Bundle cannot be initialized.";
         return false;
     }
 
@@ -235,8 +235,8 @@ bool Bundle::initialize(bool loadTaskConfigs)
         bundleSearchPaths = tokenize(paths, ":");
     }else
     {
-        std::clog << "No bundle search path set. Consider setting environment "\
-                     "variable ROCK_BUNDLE_PATH." << std::endl;
+        LOG_WARN_S << "No bundle search path set. Consider setting environment "\
+                     "variable ROCK_BUNDLE_PATH.";
     }
 
     //Determine if ROCK_BUNDLE contained absolute path or bundle name
@@ -252,31 +252,32 @@ bool Bundle::initialize(bool loadTaskConfigs)
         bundle = SingleBundle::fromNameAndSearchPaths(activeBundleC,
                                                       bundleSearchPaths);
     }
-    std::clog << "Currently selected bundle: "<<bundle.name << " at " <<
-                 bundle.path << std::endl;
+    LOG_INFO_S << "Currently selected bundle: "<<bundle.name << " at " <<
+                 bundle.path;
 
     activeBundles.push_back(bundle);
 
-    std::clog << "Discovering bundle dependencies" << std::endl;
+    LOG_DEBUG_S << "Discovering bundle dependencies";
     if(bundleSearchPaths.empty())
     {
-        std::clog << "Bundle search path is not set. Dependency resolutibn " <<
+        LOG_WARN_S << "Bundle search path is not set. Dependency resolutibn " <<
                      "to other bundles is disabled.";
     }else{
         discoverDependencies(selectedBundle(), activeBundles);
     }
-    std::clog << "Active bundles: " << std::endl;
+    LOG_INFO_S << "Active bundles: ";
+    std::string active_bundles_string;
     for(SingleBundle& b : activeBundles){
-        std::clog << "   " << b.name << " at " << b.path << "\n";
+        active_bundles_string += "   " + b.name + " at " + b.path + "\n";
     }
-    std::clog << std::endl;
+    LOG_INFO_S << active_bundles_string;
 
     //Initialze TaskConfigurations
     if(loadTaskConfigs){
-        std::clog << "Loading task configuration files from bundle" << std::endl;
+        LOG_DEBUG_S << "Loading task configuration files from bundle";
         loadTaskConfigurations();
     }
-    std::clog << "Bundles successfully initialized" << std::endl;
+    LOG_INFO_S << "Bundles successfully initialized";
 
     return true;
 }
@@ -389,8 +390,8 @@ void Bundle::discoverDependencies(const SingleBundle &bundle,
     if(!fs::exists(config_file)){
         // No bundle.yml file exists.
         // We assume that this bundle has no depending bundles
-        std::clog << "Bundle '" + bundle.name + "' does not contain a bundle" <<
-                     " configuration file '."<<config_file << std::endl;
+        LOG_INFO_S << "Bundle '" + bundle.name + "' does not contain a bundle" <<
+                     " configuration file '."<<config_file;
         return;
     }
 
@@ -430,13 +431,13 @@ void Bundle::discoverDependencies(const SingleBundle &bundle,
 
 std::vector<std::string> Bundle::loadDependenciesFromYAML(const std::string &config_file)
 {
-    std::clog << "Parsing bundle configuration file " << config_file << std::endl;
+    LOG_DEBUG_S << "Parsing bundle configuration file " << config_file;
     YAML::Node node;
     try{
         node = YAML::LoadFile(config_file);
     }catch(std::runtime_error ex){
-        std::cerr << "Could not parse bundle config file " << config_file <<
-                     ": " << ex.what() << std::endl;
+        LOG_FATAL_S << "Could not parse bundle config file " << config_file <<
+                     ": " << ex.what();
         throw(ex);
     }
 
@@ -446,7 +447,7 @@ std::vector<std::string> Bundle::loadDependenciesFromYAML(const std::string &con
             deps = node["bundle"]["dependencies"].as<std::vector<std::string>>();
         }
     }catch(std::runtime_error ex){
-        std::cerr << "Error extracting dependecies from " << config_file << std::endl;
+        LOG_ERROR_S << "Error extracting dependecies from " << config_file;
     }
 
     // Erase duplicates

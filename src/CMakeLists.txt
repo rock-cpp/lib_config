@@ -14,6 +14,7 @@ rock_library(lib_config
         base-types
         yaml-cpp
         typelib
+        base-logging
     DEPS_PLAIN 
         Boost_SYSTEM Boost_FILESYSTEM Boost_REGEX
     )
