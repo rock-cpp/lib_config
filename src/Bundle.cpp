@@ -158,9 +158,6 @@ std::string time_to_string(timeval tv)
     char time[50];
     strftime(time, 50, "%Y%m%d-%H%M%S", tm);
 
-    char tzInfo[6];
-    strftime(tzInfo, 6, "", tm);
-
     char buffer[57];
     sprintf(buffer,"%s.%04d", time, (int) (uSecs/1000.0));
     return std::string(buffer);
