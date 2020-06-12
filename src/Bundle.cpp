@@ -136,7 +136,7 @@ void SingleBundle::setAndValidatePaths()
 
     //Existence of log dir is not validated because there is no requirement for
     //it to exist. It often gets deleted when deleting log files
-    logBaseDir = (fs::path(path) / "log").string();
+    logBaseDir = (fs::path(path) / "logs").string();
 }
 
 Bundle::Bundle()
@@ -148,12 +148,28 @@ bool Bundle::initialized()
     return activeBundles.size() > 0;
 }
 
+std::string time_to_string(timeval tv)
+{
+    int uSecs = tv.tv_usec;
+
+    time_t when = tv.tv_sec;
+    struct tm *tm = localtime(&when);
+
+    char time[50];
+    strftime(time, 50, "%Y%m%d-%H%M%S", tm);
+
+    char tzInfo[6];
+    strftime(tzInfo, 6, "", tm);
+
+    char buffer[57];
+    sprintf(buffer,"%s.%04d", time, (int) (uSecs/1000.0));
+    return std::string(buffer);
+}
+
 bool Bundle::createLogDirectory()
 {
     base::Time curTime = base::Time::now();
-    fs::path logDir = fs::path(selectedBundle().logBaseDir) / curTime.toString(
-                                                            base::Time::Seconds,
-                                                            "%Y%m%d-%H%M");
+    fs::path logDir = fs::path(selectedBundle().logBaseDir) / time_to_string(curTime.toTimeval());
 
     //use other directory if log dir already exists
     std::string base = logDir.string();
