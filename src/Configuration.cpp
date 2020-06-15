@@ -128,7 +128,7 @@ bool ArrayConfigValue::merge(std::shared_ptr< ConfigValue > other)
     {
         if(i < values.size())
         {
-            values[i] = aother->values[i]->clone();
+            values[i]->merge(aother->values[i]->clone());
         }
         else
         {
