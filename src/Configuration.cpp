@@ -4,7 +4,26 @@
 #include <boost/filesystem.hpp>
 
 namespace fs = boost::filesystem;
-using namespace libConfig;
+
+namespace libConfig {
+
+YAML::Emitter& operator << (YAML::Emitter& out, const std::shared_ptr<ConfigValue>& v)
+{
+    std::shared_ptr<ComplexConfigValue> cptr = std::dynamic_pointer_cast<ComplexConfigValue>(v);
+    std::shared_ptr<SimpleConfigValue> sptr = std::dynamic_pointer_cast<SimpleConfigValue>(v);
+    std::shared_ptr<ArrayConfigValue> aptr = std::dynamic_pointer_cast<ArrayConfigValue>(v);
+
+    if(cptr){
+        return out << *cptr;
+    }else if (sptr) {
+        return out << *sptr;
+    }else if (aptr) {
+        return out << *aptr;
+    }else{
+        std::runtime_error("Could not determine ConfigValue type");
+    }
+    return out; //Never executed, here to remove warning
+}
 
 ComplexConfigValue::ComplexConfigValue(): ConfigValue(COMPLEX)
 {
@@ -26,6 +45,16 @@ void ComplexConfigValue::print(std::ostream& stream, int level) const
     {
         it.second->print(stream, level + 1);
     }
+}
+
+YAML::Emitter& operator << (YAML::Emitter& out, const ComplexConfigValue& v) {
+    out << YAML::BeginMap;
+    for(const std::pair<const std::string, std::shared_ptr<ConfigValue> >& it : v.values){
+        out << YAML::Key << it.first;
+        out << YAML::Value << it.second;
+    }
+    out << YAML::EndMap;
+    return out;
 }
 
 bool ComplexConfigValue::merge(std::shared_ptr<ConfigValue> other)
@@ -111,6 +140,16 @@ void ArrayConfigValue::print(std::ostream &stream, int level) const
     }
 }
 
+YAML::Emitter &operator <<(YAML::Emitter &out, const ArrayConfigValue &v)
+{
+    out << YAML::BeginSeq;
+    for(const std::shared_ptr<ConfigValue> &v : v.values){
+        out << v;
+    }
+    out << YAML::EndSeq;
+    return out;
+}
+
 bool ArrayConfigValue::merge(std::shared_ptr< ConfigValue > other)
 {
     if(other->getType() != ARRAY)
@@ -180,6 +219,11 @@ void SimpleConfigValue::print(std::ostream &stream, int level) const
     stream << name << " : " << value << std::endl;
 }
 
+YAML::Emitter& operator << (YAML::Emitter& out, const SimpleConfigValue& v) {
+    out << v.getValue();
+    return out;
+}
+
 bool SimpleConfigValue::merge(const std::shared_ptr< ConfigValue > other)
 {
     if(other->getType() != SIMPLE)
@@ -240,7 +284,7 @@ const std::string& ConfigValue::getCxxTypeName()
     return cxxTypeName;
 }
 
-std::ostream& libConfig::operator<<(std::ostream& stream, const Configuration& conf)
+std::ostream& operator<<(std::ostream& stream, const Configuration& conf)
 {
     conf.print(stream);
     
@@ -254,6 +298,16 @@ void Configuration::print(std::ostream &stream) const
     {
         it->second->print(stream, 1);
     }
+}
+
+YAML::Emitter& operator << (YAML::Emitter& out, const Configuration& v) {
+    out << YAML::BeginMap;
+    for(const std::pair<const std::string, std::shared_ptr<ConfigValue>> it : v.values){
+        out << YAML::Key << it.first;
+        out << YAML::Value << it.second;
+    }
+    out << YAML::EndMap;
+    return out;
 }
 
 Configuration::Configuration(const std::string& name) : name(name)
@@ -303,6 +357,13 @@ bool Configuration::fillFromYaml(const std::string& yml)
     return ret;
 }
 
+std::string Configuration::toYaml()
+{
+    YAML::Emitter emitter;
+    emitter << *this;
+    return emitter.c_str();
+}
+
 bool Configuration::merge(const Configuration& other)
 {
     std::map<std::string, std::shared_ptr<ConfigValue> >::const_iterator it;
@@ -311,8 +372,10 @@ bool Configuration::merge(const Configuration& other)
         std::map<std::string, std::shared_ptr<ConfigValue> >::iterator entry = values.find(it->first);
         if(entry != values.end())
         {
-            if(!entry->second->merge(it->second))
+            if(!entry->second->merge(it->second)){
+                std::clog << "Error merging property " << it->first << std::endl;
                 return false;
+            }
         }
         else
         {
@@ -412,3 +475,5 @@ const std::map<std::string, Configuration> &MultiSectionConfiguration::getSubsec
 {
     return subsections;
 }
+}
+

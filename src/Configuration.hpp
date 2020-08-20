@@ -5,6 +5,7 @@
 #include <map>
 #include <memory>
 #include <iostream>
+#include <yaml-cpp/yaml.h>
 
 namespace libConfig
 {
@@ -41,7 +42,9 @@ protected:
     //C++ type representation name
     std::string cxxTypeName;
     ConfigValue(enum Type);
+    friend YAML::Emitter& operator << (YAML::Emitter& out, const std::shared_ptr<ConfigValue>& v);
 };
+YAML::Emitter& operator << (YAML::Emitter& out, const std::shared_ptr<ConfigValue>& v);
 
 class SimpleConfigValue : public ConfigValue
 {
@@ -56,7 +59,9 @@ public:
     const std::string &getValue() const;
 private:
     std::string value;
+    friend YAML::Emitter& operator << (YAML::Emitter& out, const SimpleConfigValue& v);
 };
+YAML::Emitter& operator << (YAML::Emitter& out, const SimpleConfigValue& v);
 
 class ComplexConfigValue : public ConfigValue
 {
@@ -69,8 +74,10 @@ public:
     const std::map<std::string, std::shared_ptr<ConfigValue>> &getValues() const;
     void addValue(const std::string &name, std::shared_ptr<ConfigValue> value);
 private:
+    friend YAML::Emitter& operator << (YAML::Emitter& out, const ComplexConfigValue& v);
     std::map<std::string, std::shared_ptr<ConfigValue>> values;
 };
+
 
 class ArrayConfigValue : public ConfigValue
 {
@@ -84,7 +91,9 @@ public:
     void addValue(std::shared_ptr<ConfigValue> value);
 private:
     std::vector<std::shared_ptr<ConfigValue> > values;
+    friend YAML::Emitter& operator << (YAML::Emitter& out, const ArrayConfigValue& v);
 };
+YAML::Emitter& operator << (YAML::Emitter& out, const ArrayConfigValue& v);
 
 class Configuration
 {
@@ -94,7 +103,9 @@ public:
     ~Configuration();
     
     void print(std::ostream &stream = std::cout) const;
+
     bool fillFromYaml(const std::string &yml);
+    std::string toYaml();
     //Other configuration has higher priority. I.e. values in other replace
     //values in this.
     bool merge(const Configuration &other);
@@ -105,7 +116,10 @@ public:
 private:
     std::string name;
     std::map<std::string, std::shared_ptr<ConfigValue> > values;
+    friend YAML::Emitter& operator << (YAML::Emitter& out, const Configuration& v);
 };
+YAML::Emitter& operator << (YAML::Emitter& out, const Configuration& v);
+std::ostream& operator << (std::ostream& stream, const Configuration &conf);
 
 class MultiSectionConfiguration
 {
@@ -131,6 +145,5 @@ protected:
     //std::string filepath;
 };
 
-std::ostream& operator <<(std::ostream& stream, const Configuration &conf);
 
 }
