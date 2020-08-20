@@ -68,10 +68,13 @@ public:
     Bundle();
     TaskConfigurations taskConfigurations;
 
+    static std::string getSelectedBundle();
+    static bool isBundleSelected();
+
     /**
      * @brief Check if bundle is suscessfully initialized
      */
-    bool initialized();
+    bool initialized() const;
 
     /**
      * This function creates a log directory 

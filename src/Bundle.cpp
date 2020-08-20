@@ -143,7 +143,22 @@ Bundle::Bundle()
 {
 }
 
-bool Bundle::initialized()
+std::string Bundle::getSelectedBundle()
+{
+    const char *activeBundleC = getenv("ROCK_BUNDLE");
+    if(activeBundleC){
+        return activeBundleC;
+    }else{
+        return "";
+    }
+}
+
+bool Bundle::isBundleSelected()
+{
+    return !getSelectedBundle().empty();
+}
+
+bool Bundle::initialized() const
 {
     return activeBundles.size() > 0;
 }
@@ -234,8 +249,8 @@ bool Bundle::initialize(bool loadTaskConfigs)
     //  ROCK_BUNDLE: contains currently selected bundle (name or absolute path)
     //  ROCK_BUNDLE_PATH: contains search paths, where to look for a bundle.
     //                    multiple paths are separated by ':'
-    const char *activeBundleC = getenv("ROCK_BUNDLE");
-    if(!activeBundleC)
+    std::string activeBundle = getSelectedBundle();
+    if(activeBundle.empty())
     {
         LOG_ERROR_S << "ROCK_BUNDLE not set. Bundle cannot be initialized.";
         return false;
@@ -253,7 +268,7 @@ bool Bundle::initialize(bool loadTaskConfigs)
     }
 
     //Determine if ROCK_BUNDLE contained absolute path or bundle name
-    fs::path pathCheck(activeBundleC);
+    fs::path pathCheck(activeBundle);
     SingleBundle bundle;
     if(pathCheck.is_absolute() && fs::exists(pathCheck))
     {
@@ -262,7 +277,7 @@ bool Bundle::initialize(bool loadTaskConfigs)
     }else
     {
         //ROCK_BUNDLE contains bundle name
-        bundle = SingleBundle::fromNameAndSearchPaths(activeBundleC,
+        bundle = SingleBundle::fromNameAndSearchPaths(activeBundle,
                                                       bundleSearchPaths);
     }
     LOG_INFO_S << "Currently selected bundle: "<<bundle.name << " at " <<
