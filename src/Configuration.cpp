@@ -143,8 +143,8 @@ void ArrayConfigValue::print(std::ostream &stream, int level) const
 YAML::Emitter &operator <<(YAML::Emitter &out, const ArrayConfigValue &v)
 {
     out << YAML::BeginSeq;
-    for(const std::shared_ptr<ConfigValue> &v : v.values){
-        out << v;
+    for(const std::shared_ptr<ConfigValue> &value : v.values){
+        out << value;
     }
     out << YAML::EndSeq;
     return out;
