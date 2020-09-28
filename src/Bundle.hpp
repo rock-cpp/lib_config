@@ -122,6 +122,7 @@ public:
     bool initialize(bool loadTaskConfigs=true);
 
     const std::string &getActiveBundleName();
+    const std::vector<SingleBundle>& getActiveBundles();
 
     /**
      * @brief Returns reference to top-level bundle

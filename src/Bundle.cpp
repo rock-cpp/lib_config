@@ -312,7 +312,12 @@ bool Bundle::initialize(bool loadTaskConfigs)
 
 const std::string &Bundle::getActiveBundleName()
 {
-    return selectedBundle().name;
+	return selectedBundle().name;
+}
+
+const std::vector<SingleBundle>& Bundle::getActiveBundles()
+{
+	return activeBundles;
 }
 
 SingleBundle& Bundle::selectedBundle()
