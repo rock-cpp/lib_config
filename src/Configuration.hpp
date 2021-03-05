@@ -34,6 +34,8 @@ public:
     const std::string &getCxxTypeName();
     
     virtual void print(std::ostream &stream, int level = 0) const = 0;
+    virtual bool operator ==(const ConfigValue &other) const = 0;
+    virtual bool operator !=(const ConfigValue &other) const;
 
     virtual ~ConfigValue();    
 protected:
@@ -57,6 +59,7 @@ public:
     virtual std::shared_ptr<ConfigValue> clone();
     
     const std::string &getValue() const;
+    virtual bool operator ==(const ConfigValue &other) const;
 private:
     std::string value;
     friend YAML::Emitter& operator << (YAML::Emitter& out, const SimpleConfigValue& v);
@@ -73,6 +76,7 @@ public:
     virtual std::shared_ptr<ConfigValue> clone();
     const std::map<std::string, std::shared_ptr<ConfigValue>> &getValues() const;
     void addValue(const std::string &name, std::shared_ptr<ConfigValue> value);
+    bool operator ==(const ConfigValue &other) const;
 private:
     friend YAML::Emitter& operator << (YAML::Emitter& out, const ComplexConfigValue& v);
     std::map<std::string, std::shared_ptr<ConfigValue>> values;
@@ -87,8 +91,9 @@ public:
     virtual void print(std::ostream &stream, int level = 0) const;
     virtual bool merge(std::shared_ptr<ConfigValue> other);
     virtual std::shared_ptr<ConfigValue> clone();
-    const std::vector<std::shared_ptr<ConfigValue> > getValues() const;
+    const std::vector<std::shared_ptr<ConfigValue> >& getValues() const;
     void addValue(std::shared_ptr<ConfigValue> value);
+    bool operator ==(const ConfigValue &other) const;
 private:
     std::vector<std::shared_ptr<ConfigValue> > values;
     friend YAML::Emitter& operator << (YAML::Emitter& out, const ArrayConfigValue& v);
@@ -109,6 +114,7 @@ public:
     //Other configuration has higher priority. I.e. values in other replace
     //values in this.
     bool merge(const Configuration &other);
+    bool operator ==(const Configuration &other) const;
     
     const std::string &getName() const;
     const std::map<std::string, std::shared_ptr<ConfigValue> > &getValues() const;
