@@ -103,6 +103,39 @@ void ComplexConfigValue::addValue(const std::string &name, std::shared_ptr<Confi
     values.insert(std::make_pair(name, value));
 }
 
+bool ComplexConfigValue::operator ==(const ConfigValue &other) const
+{
+    if(other.getType() != ConfigValue::Type::COMPLEX){
+        return false;
+    }
+
+    const ComplexConfigValue* other_casted = dynamic_cast<const ComplexConfigValue*>(&other);
+    if(other_casted == nullptr){
+        throw std::invalid_argument("Can't cast ConfigValue with type COMPLEX to ComplexConfigValue. This should always be possible, so data is corrupt");
+    }
+
+    for(std::pair<std::string, std::shared_ptr<ConfigValue> > val : this->values){
+        // A field, which is defined in this is not defined in other
+        if(other_casted->values.find(val.first) == other_casted->values.end()){
+            return false;
+        }
+        // The values to the same field are differnt
+        std::shared_ptr<ConfigValue> val_a = val.second;
+        std::shared_ptr<ConfigValue> val_b = other_casted->getValues().at(val.first);
+        if(*val_a != *val_b){
+            return false;
+        }
+    }
+    // A field, which is defined in other is not defined in this
+    for(std::pair<std::string, std::shared_ptr<ConfigValue> > val : other_casted->values){
+        if(this->values.find(val.first) == this->values.end()){
+            return false;
+        }
+    }
+
+    return true;
+}
+
 const std::map< std::string, std::shared_ptr<ConfigValue> >& ComplexConfigValue::getValues() const
 {
     return values;
@@ -123,7 +156,34 @@ void ArrayConfigValue::addValue(std::shared_ptr<ConfigValue> value)
     values.push_back(value);
 }
 
-const std::vector<std::shared_ptr<ConfigValue> > ArrayConfigValue::getValues() const
+bool ArrayConfigValue::operator ==(const ConfigValue &other) const
+{
+    if(other.getType() != ConfigValue::Type::ARRAY){
+        return false ;
+    }
+    const ArrayConfigValue* other_casted = dynamic_cast<const ArrayConfigValue*>(&other);
+    if(other_casted == nullptr){
+        throw std::invalid_argument("Can't cast ConfigValue with type ARRAY to ArrayConfigValue. This should always be possible, so data is corrupt");
+    }
+
+    // Compare sizes
+    if(other_casted->values.size() != this->values.size()){
+        return false;
+    }
+
+    // Compare element-wise
+    for(size_t i=0; i<this->values.size(); i++){
+        std::shared_ptr<ConfigValue> val_a = this->values[i];
+        std::shared_ptr<ConfigValue> val_b = other_casted->values[i];
+        if((*val_a) != (*val_b)){
+            return false;
+        }
+    }
+
+    return true;
+}
+
+const std::vector<std::shared_ptr<ConfigValue> >& ArrayConfigValue::getValues() const
 {
     return values;
 }
@@ -212,6 +272,18 @@ const std::string& SimpleConfigValue::getValue() const
     return value;
 }
 
+bool SimpleConfigValue::operator ==(const ConfigValue &other) const
+{
+    if(other.getType() != ConfigValue::Type::SIMPLE){
+        return false;
+    }
+    const SimpleConfigValue* other_casted = dynamic_cast<const SimpleConfigValue*>(&other);
+    if(other_casted == nullptr){
+        throw std::invalid_argument("Can't cast ConfigValue with type SIMPLE to SimpleConfigValue. This should always be possible, so data is corrupt");
+    }
+    return this->value == other_casted->value;
+}
+
 void SimpleConfigValue::print(std::ostream &stream, int level) const
 {
     for(int i = 0; i < level; i++)
@@ -282,6 +354,11 @@ void ConfigValue::setCxxTypeName(const std::string& name)
 const std::string& ConfigValue::getCxxTypeName()
 {
     return cxxTypeName;
+}
+
+bool ConfigValue::operator !=(const ConfigValue &other) const
+{
+    return !(*this==other);
 }
 
 std::ostream& operator<<(std::ostream& stream, const Configuration& conf)
@@ -383,6 +460,30 @@ bool Configuration::merge(const Configuration& other)
         }
     }
     
+    return true;
+}
+
+bool Configuration::operator ==(const Configuration &other) const
+{
+    for(std::pair<std::string, std::shared_ptr<ConfigValue> > val : this->values){
+        // A field, which is defined in this is not defined in other
+        if(other.values.find(val.first) == other.values.end()){
+            return false;
+        }
+        // The values to the same field are differnt
+        std::shared_ptr<ConfigValue> val_a = val.second;
+        std::shared_ptr<ConfigValue> val_b = other.getValues().at(val.first);
+        if(*val_a != *val_b){
+            return false;
+        }
+    }
+    // A field, which is defined in other is not defined in this
+    for(std::pair<std::string, std::shared_ptr<ConfigValue> > val : other.values){
+        if(this->values.find(val.first) == this->values.end()){
+            return false;
+        }
+    }
+
     return true;
 }
 
