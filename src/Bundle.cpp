@@ -1,7 +1,6 @@
 #include "Bundle.hpp"
 #include <stdlib.h>
 #include <stdexcept>
-#include <boost/tokenizer.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 #include <iostream>
@@ -15,6 +14,7 @@ namespace fs = boost::filesystem;
 using namespace libConfig;
 
 Bundle * Bundle::instance;
+std::vector<std::string> Bundle::_bundleSearchPaths;
 
 //Splits a string into a vector at the position of a specific tokens that are
 //present in the input string.
@@ -31,6 +31,35 @@ std::vector<std::string> tokenize(std::string data, std::string delim)
     return ret;
 }
 
+
+std::vector<std::string> findFoldersInSearchPaths(const std::string& folderName,
+                       const std::vector<std::string>& searchPaths)
+{
+    std::vector<std::string> ret;
+    for(const std::string &path : searchPaths)
+    {
+        fs::path candidate = fs::path(path) / folderName;
+
+        if(boost::filesystem::exists(candidate))
+        {
+            ret.push_back(candidate.string());
+        }
+    }
+    return ret;
+}
+
+std::vector<std::string> findFoldersInSearchPaths(const std::vector<std::string>& searchPaths)
+{
+    std::vector<std::string> r;
+    for(const std::string& s : searchPaths){
+        for(fs::directory_entry& p : fs::directory_iterator(s))
+            if (p.status().type() == fs::file_type::directory_file){
+                r.push_back(p.path().string());
+            }
+    }
+    return r;
+}
+
 //!
 //! @brief Checks if in one of multiple possibel search paths a given folder
 //!        exists
@@ -39,16 +68,12 @@ std::vector<std::string> tokenize(std::string data, std::string delim)
 std::string findFolderInSearchPaths(std::string folderName,
                        std::vector<std::string> searchPaths)
 {
-    for(const std::string &path : searchPaths)
-    {
-        fs::path candidate = fs::path(path) / folderName;
-
-        if(boost::filesystem::exists(candidate))
-        {
-            return candidate.string();
-        }
+    std::vector<std::string> candidates = findFoldersInSearchPaths(folderName, searchPaths);
+    if(candidates.empty()){
+        return "";
+    }else{
+        return candidates[0];
     }
-    return "";
 }
 
 SingleBundle::SingleBundle() :
@@ -111,27 +136,21 @@ void SingleBundle::setAndValidatePaths()
     fs::path subpath = fs::path("config");
     configDir = (path / subpath).string();
     if(!fs::exists(configDir)){
-        std::clog << "The path of bundle '" << name << "' was resolved to '" <<
-                     path << "', but the path does not contain a '" <<
-                     subpath.string() << "' subfolder.";
+        configDir = "";
     }
 
     //Config folder (config/orogen)
     subpath = fs::path("config") / "orogen";
     orogenConfigDir = (path / subpath).string();
     if(!fs::exists(orogenConfigDir)){
-        std::clog << "The path of bundle '" << name << "' was resolved to '" <<
-                     path << "', but the path does not contain a '" <<
-                     subpath.string() << "' subfolder.";
+        orogenConfigDir = "";
     }
 
     //Data folder
     subpath = fs::path("data");
     dataDir = (path / subpath).string();
-    if(!fs::exists(configDir)){
-        std::clog << "The path of bundle '" << name << "' was resolved to '" <<
-                     dataDir << "', but the path does not contain a '" <<
-                     subpath.string() << "' subfolder.";
+    if(!fs::exists(dataDir)){
+        dataDir = "";
     }
 
     //Existence of log dir is not validated because there is no requirement for
@@ -143,7 +162,7 @@ Bundle::Bundle()
 {
 }
 
-std::string Bundle::getSelectedBundle()
+std::string Bundle::getSelectedBundleName()
 {
     const char *activeBundleC = getenv("ROCK_BUNDLE");
     if(activeBundleC){
@@ -155,8 +174,85 @@ std::string Bundle::getSelectedBundle()
 
 bool Bundle::isBundleSelected()
 {
-    return !getSelectedBundle().empty();
+    return !getSelectedBundleName().empty();
 }
+
+bool Bundle::setSelectedBundle(const std::string& bundle_name)
+{
+    if(!findBundle(bundle_name).empty()){
+        setenv("ROCK_BUNDLE", bundle_name.c_str(), true);
+        return true;
+    }else{
+        LOG_ERROR_S << "Could not select bundle " << bundle_name << ", because no bundle with that name could be found in ROCK_BUNDLE_PATH";
+        return false;
+    }
+}
+
+void Bundle::unselectBundle()
+{
+    setenv("ROCK_BUNDLE", "", true);
+}
+
+std::vector<SingleBundle> Bundle::getAvailableBundles()
+{
+    std::vector<SingleBundle> ret;
+    std::vector<std::string> bnames = getAvailableBundleNames();
+    for(const std::string& bname : bnames)
+    {
+        ret.push_back(SingleBundle::fromNameAndSearchPaths(bname, bundleSearchPaths()));
+    }
+    return ret;
+}
+
+std::vector<std::string> Bundle::getAvailableBundleNames()
+{
+    std::vector<std::string> ret;
+    for(const std::string& bp : findFoldersInSearchPaths(bundleSearchPaths()))
+    {
+        ret.push_back(fs::path(bp).filename().string());
+    }
+    return ret;
+}
+
+std::vector<std::string> Bundle::tokenize(std::string data, std::string delim)
+{
+    boost::char_separator<char> sep(delim.c_str());
+    boost::tokenizer<boost::char_separator<char> > tokens(data, sep);
+
+    std::vector<std::string> ret;
+    for(const std::string &token : tokens)
+    {
+        ret.push_back(token);
+    }
+    return ret;
+}
+
+std::string Bundle::findBundle(const std::string &bundle_name)
+{
+    SingleBundle b = SingleBundle::fromNameAndSearchPaths(bundle_name,
+                                                          bundleSearchPaths());
+    return b.path;
+}
+
+std::vector<std::string> Bundle::bundleSearchPaths()
+{
+    if(!_bundleSearchPaths.empty()){
+        return _bundleSearchPaths;
+    }
+
+    const char *pathsC = getenv("ROCK_BUNDLE_PATH");
+    if(pathsC)
+    {
+        std::string paths = pathsC;
+        _bundleSearchPaths = tokenize(paths, ":");
+    }else
+    {
+        std::clog << "No bundle search path set. Consider setting environment "\
+                     "variable ROCK_BUNDLE_PATH." << std::endl;
+    }
+    return _bundleSearchPaths;
+}
+
 
 bool Bundle::initialized() const
 {
@@ -249,24 +345,14 @@ bool Bundle::initialize(bool loadTaskConfigs)
     //  ROCK_BUNDLE: contains currently selected bundle (name or absolute path)
     //  ROCK_BUNDLE_PATH: contains search paths, where to look for a bundle.
     //                    multiple paths are separated by ':'
-    std::string activeBundle = getSelectedBundle();
+    std::string activeBundle = getSelectedBundleName();
     if(activeBundle.empty())
     {
         LOG_ERROR_S << "ROCK_BUNDLE not set. Bundle cannot be initialized.";
         return false;
     }
 
-    const char *pathsC = getenv("ROCK_BUNDLE_PATH");
-    if(pathsC)
-    {
-        std::string paths = pathsC;
-        bundleSearchPaths = tokenize(paths, ":");
-    }else
-    {
-        LOG_WARN_S << "No bundle search path set. Consider setting environment "\
-                     "variable ROCK_BUNDLE_PATH.";
-    }
-
+    
     //Determine if ROCK_BUNDLE contained absolute path or bundle name
     fs::path pathCheck(activeBundle);
     SingleBundle bundle;
@@ -278,7 +364,7 @@ bool Bundle::initialize(bool loadTaskConfigs)
     {
         //ROCK_BUNDLE contains bundle name
         bundle = SingleBundle::fromNameAndSearchPaths(activeBundle,
-                                                      bundleSearchPaths);
+                                                      bundleSearchPaths());
     }
     LOG_INFO_S << "Currently selected bundle: "<<bundle.name << " at " <<
                  bundle.path;
@@ -286,7 +372,7 @@ bool Bundle::initialize(bool loadTaskConfigs)
     activeBundles.push_back(bundle);
 
     LOG_DEBUG_S << "Discovering bundle dependencies";
-    if(bundleSearchPaths.empty())
+    if(bundleSearchPaths().empty())
     {
         LOG_WARN_S << "Bundle search path is not set. Dependency resolutibn " <<
                      "to other bundles is disabled.";
@@ -318,6 +404,16 @@ const std::string &Bundle::getActiveBundleName()
 const std::vector<SingleBundle>& Bundle::getActiveBundles()
 {
 	return activeBundles;
+}
+
+const std::vector<std::string> Bundle::getActiveBundleNames()
+{
+    std::vector<std::string> ret;
+	for(const SingleBundle& sb : getActiveBundles())
+    {
+        ret.push_back(sb.name);
+    }
+    return ret;
 }
 
 SingleBundle& Bundle::selectedBundle()
@@ -362,7 +458,7 @@ std::string Bundle::findFileByName(const std::string& relativePath)
         if(boost::filesystem::exists(curPath))
             return curPath.string();
     }
-    throw std::runtime_error("Bundle::findFile : Error, could not find file " + relativePath);
+    throw std::runtime_error("Could not find file " + relativePath);
 }
 
 std::vector<std::string> Bundle::findFilesByName(const std::string& relativePath)
@@ -409,8 +505,7 @@ std::vector<std::string> Bundle::getConfigurationPathsForTaskModel(
     fs::path relativePath = fs::path("config") / "orogen" / (task_model_name+".yml");
     std::vector<std::string> paths = findFilesByName(relativePath.string());
     if(paths.empty()){
-        std::runtime_error(std::string() + "Bundle::getConfigurationPaths: " +
-                           "Could not find configuration file for task " +
+        std::runtime_error(std::string() + "Could not find configuration file for task " +
                            task_model_name + " in any of the active bundles");
     }
     return paths;
@@ -452,7 +547,7 @@ void Bundle::discoverDependencies(const SingleBundle &bundle,
             continue;
         }
         SingleBundle d = SingleBundle::fromNameAndSearchPaths(bundleName,
-                                                              bundleSearchPaths);
+                                                              bundleSearchPaths());
         dependencies.push_back(d);
         to_inspect.push_back(d);
     }
@@ -490,13 +585,6 @@ std::vector<std::string> Bundle::loadDependenciesFromYAML(const std::string &con
             ret.push_back(d);
     }
     return ret;
-}
-
-std::string Bundle::findBundle(const std::string &bundle_name)
-{
-    SingleBundle b = SingleBundle::fromNameAndSearchPaths(bundle_name,
-                                                          bundleSearchPaths);
-    return b.path;
 }
 
 

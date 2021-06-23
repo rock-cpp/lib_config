@@ -330,7 +330,7 @@ std::string YAMLConfigParser::applyStringVariableInsertions(const std::string& v
             
             char *envVal = std::getenv(var.c_str());
             if(!envVal)
-                throw std::runtime_error("YAML Parser: Error, could not resolve environment variable " + var + " (from " + innerMatch[0] + ")");
+                throw std::runtime_error("Could not resolve environment variable " + var + " (from " + innerMatch[0] + ")");
             //add variable to output string:
             ret = envVal;
             return ret;
@@ -353,18 +353,18 @@ std::string YAMLConfigParser::applyStringVariableInsertions(const std::string& v
             }
             
             if(file.empty())
-                throw std::runtime_error("YAML Parser: Error, could not find file " + var + " (from " + innerMatch[0] + ")");
+                throw std::runtime_error("Could not find file " + var + " (from " + innerMatch[0] + ")");
             //add variable to output string:
             ret = file;
             return ret;
         }
         
-        throw std::runtime_error("YAML Parser: Error, could not evaluate statement: " + innerMatch[0]);
+        throw std::runtime_error("Could not evaluate statement: " + innerMatch[0]);
     };
     
     retVal = boost::regex_replace(val, outerRegex, [&](const boost::smatch &match) {
         if(match.size() <= 1)
-            throw std::runtime_error("YAMLConfigParser::Error empty <% > sequence");
+            throw std::runtime_error("Empty <% > sequence");
         
         std::string in = boost::regex_replace(match[1].str(), boost::regex("#\\{(.*)?\\}"), "$1");
         

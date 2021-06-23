@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include "Configuration.hpp"
+#include <boost/tokenizer.hpp>
 
 namespace libConfig
 {
@@ -26,16 +27,16 @@ public:
     std::string configDir;
     std::string orogenConfigDir;
 
-    friend bool operator== (SingleBundle &n1, std::string n2) {
+    friend bool operator== (const SingleBundle &n1, const std::string n2) {
         return (n1.name == n2);
     };
-    friend bool operator!= (SingleBundle &n1, std::string n2) {
+    friend bool operator!= (const SingleBundle &n1, const std::string n2) {
         return !(n1 == n2);
     };
-    friend bool operator== (SingleBundle &n1, SingleBundle &n2) {
+    friend bool operator== (const SingleBundle &n1, const SingleBundle &n2) {
         return (n1.name == n2.name);
     };
-    friend bool operator!= (SingleBundle &n1, SingleBundle &n2) {
+    friend bool operator!= (const SingleBundle &n1, const SingleBundle &n2) {
         return !(n1 == n2.name);
     };
 };
@@ -58,8 +59,9 @@ class Bundle
 {
 private:
     static Bundle *instance;
+    static std::vector<std::string> _bundleSearchPaths;
     
-    std::vector<std::string> bundleSearchPaths;
+
     //Contains the hierarchy of the selected bundles and its dependencies
     std::vector<SingleBundle> activeBundles;
     std::string currentLogDir;
@@ -68,8 +70,18 @@ public:
     Bundle();
     TaskConfigurations taskConfigurations;
 
-    static std::string getSelectedBundle();
+    static std::string getSelectedBundleName();
     static bool isBundleSelected();
+    static bool setSelectedBundle(const std::string& bundle_name);
+    static void unselectBundle();
+    static std::vector<std::string> getAvailableBundleNames();
+    static std::vector<SingleBundle> getAvailableBundles();
+
+    //Splits a string into a vector at the position of a specific tokens that are
+    //present in the input string.
+    static std::vector<std::string> tokenize(std::string data, std::string delim);
+    static std::string findBundle(const std::string &bundle_name);
+    static std::vector<std::string> bundleSearchPaths();
 
     /**
      * @brief Check if bundle is suscessfully initialized
@@ -123,6 +135,7 @@ public:
 
     const std::string &getActiveBundleName();
     const std::vector<SingleBundle>& getActiveBundles();
+    const std::vector<std::string> getActiveBundleNames();
 
     /**
      * @brief Returns reference to top-level bundle
@@ -190,12 +203,6 @@ public:
     //Extension has to be given with dot. E.g. ".yml" NOT "yml"
     std::vector<std::string> findFilesByExtension(
             const std::string& relativePath, const std::string& ext);
-
-    /**
-     * Checks the bundle paths for the given bundle
-     * and returns the full path if found, empty otherwise
-     */
-    std::string findBundle(const std::string &bundle_name);
 
     /**
      * Find all dependencies of the given bundle. Ignores cyclic dependencies.
