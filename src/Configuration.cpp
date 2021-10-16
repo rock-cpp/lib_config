@@ -572,7 +572,7 @@ bool MultiSectionConfiguration::mergeConfigFile(
     return true;
 }
 
-const std::map<std::string, Configuration> &MultiSectionConfiguration::getSubsections()
+const std::map<std::string, Configuration> &MultiSectionConfiguration::getSubsections() const
 {
     return subsections;
 }

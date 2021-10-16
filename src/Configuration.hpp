@@ -144,7 +144,7 @@ public:
     Configuration getConfig(const std::vector<std::string> &sections) const;
     bool mergeConfigFile(const MultiSectionConfiguration& lowerPriorityFile);
     std::string taskModelName;
-    const std::map<std::string, Configuration>& getSubsections();
+    const std::map<std::string, Configuration>& getSubsections() const;
 protected:
     //Maps a configuration subsection name to Configuration
     std::map<std::string, Configuration> subsections;
