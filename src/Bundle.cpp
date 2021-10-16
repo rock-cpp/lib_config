@@ -563,7 +563,7 @@ std::vector<std::string> Bundle::loadDependenciesFromYAML(const std::string &con
     YAML::Node node;
     try{
         node = YAML::LoadFile(config_file);
-    }catch(std::runtime_error ex){
+    }catch(std::runtime_error& ex){
         LOG_FATAL_S << "Could not parse bundle config file " << config_file <<
                      ": " << ex.what();
         throw(ex);
@@ -574,7 +574,7 @@ std::vector<std::string> Bundle::loadDependenciesFromYAML(const std::string &con
         if(node["bundle"] && node["bundle"]["dependencies"]){
             deps = node["bundle"]["dependencies"].as<std::vector<std::string>>();
         }
-    }catch(std::runtime_error ex){
+    }catch(std::runtime_error& ex){
         LOG_ERROR_S << "Error extracting dependecies from " << config_file;
     }
 
