@@ -437,6 +437,11 @@ std::string Bundle::getConfigurationPath(const std::string &task)
     }
 }
 
+const bool Bundle::hasConfigForTask(const std::string &taskModelName) const
+{
+    return taskConfigurations.hasConfigForTask(taskModelName);
+}
+
 std::string Bundle::getLogDirectory()
 {
     if(currentLogDir.empty()){
@@ -627,12 +632,15 @@ Configuration TaskConfigurations::getConfig(const std::string &taskModelName,
 
 const MultiSectionConfiguration &TaskConfigurations::getMultiConfig(const std::string &taskModelName) const
 {
-
-    auto cfgIt = taskConfigurations.find( taskModelName );
-    
-    if ( cfgIt == taskConfigurations.end() ) {
+    if(hasConfigForTask(taskModelName)){
+        return taskConfigurations.at(taskModelName);
+    }
+    else{
         throw std::out_of_range("No task configuration for task model name " + taskModelName + " found.");
     }
-    
-    return cfgIt->second;
+}
+
+const bool TaskConfigurations::hasConfigForTask(const std::string &taskModelName) const
+{
+    return taskConfigurations.find( taskModelName ) != taskConfigurations.end();
 }

@@ -576,5 +576,10 @@ const std::map<std::string, Configuration> &MultiSectionConfiguration::getSubsec
 {
     return subsections;
 }
+
+const bool MultiSectionConfiguration::hasConfigSection(const std::string &section_name) const
+{
+    return subsections.find(section_name) != subsections.end();
+}
 }
 

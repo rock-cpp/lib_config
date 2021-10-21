@@ -52,6 +52,7 @@ public:
     Configuration getConfig (const std::string& taskModelName,
                             const std::vector<std::string>& sections) const;
     const MultiSectionConfiguration& getMultiConfig(const std::string& taskModelName) const;
+    const bool hasConfigForTask(const std::string& taskModelName) const;
 };
 
 // Represents a bundle with all its bundles it depends on
@@ -170,6 +171,8 @@ public:
      *             since include bundle dependencies}
      * */
     std::string getConfigurationPath(const std::string &task);
+
+    const bool hasConfigForTask(const std::string& taskModelName) const;
     
     /**
      * Returns the path to the directory 
