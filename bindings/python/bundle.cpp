@@ -42,6 +42,7 @@ BOOST_PYTHON_MODULE(bundle)
             .def("findBundle", &Bundle::findBundle)
             .def("bundleSearchPaths", &Bundle::bundleSearchPaths)
             .def("initialize", &Bundle::initialize)
+            .def("initialized", &Bundle::initialized)
             .def("getActiveBundleName", &Bundle::getActiveBundleName,
                  py::return_value_policy<py::copy_const_reference>())
             .def("getActiveBundles", &Bundle::getActiveBundles,
