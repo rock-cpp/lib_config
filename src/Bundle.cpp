@@ -484,8 +484,9 @@ std::string Bundle::findFileByName(const std::string& relativePath)
     for(const SingleBundle &bundle : activeBundles)
     {
         fs::path curPath = fs::path(bundle.path) / relPath;
+        fs::path fullPath = fs::path(bundle.path) / relativePath;
         if(boost::filesystem::exists(curPath))
-            return curPath.string();
+            return fullPath.string();
     }
     throw std::runtime_error("Could not find file. relativePath = " + relativePath + ", relPath = " + relPath);
 }
