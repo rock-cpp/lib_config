@@ -455,15 +455,39 @@ const std::string& Bundle::getDataDirectory()
     return selectedBundle().dataDir;
 }
 
+
+template <typename Out>
+void split(const std::string &s, char delim, Out result) {
+    std::istringstream iss(s);
+    std::string item;
+    while (std::getline(iss, item, delim)) {
+        *result++ = item;
+    }
+}
+
+std::vector<std::string> split(const std::string &s, char delim) {
+    std::vector<std::string> elems;
+    split(s, delim, std::back_inserter(elems));
+    return elems;
+}
+
 std::string Bundle::findFileByName(const std::string& relativePath)
 {
+    if (relativePath.empty())
+        throw std::runtime_error("The path to the file is empty. relativePath = " + relativePath);
+
+    LOG_DEBUG_S << "relativePath = " << relativePath << std::endl;
+    // remove any arguments, e.g. from syscall template
+    std::vector<std::string> split_str = split(relativePath, ' ');
+    const std::string& relPath = split_str.at(0);
+    LOG_DEBUG_S << "relPath = " << relPath << std::endl;
     for(const SingleBundle &bundle : activeBundles)
     {
-        fs::path curPath = fs::path(bundle.path) / relativePath;
+        fs::path curPath = fs::path(bundle.path) / relPath;
         if(boost::filesystem::exists(curPath))
             return curPath.string();
     }
-    throw std::runtime_error("Could not find file " + relativePath);
+    throw std::runtime_error("Could not find file. relativePath = " + relativePath + ", relPath = " + relPath);
 }
 
 std::vector<std::string> Bundle::findFilesByName(const std::string& relativePath)
