@@ -53,7 +53,9 @@ int handle_request(int argc, char** argv)
     std::string mode=argv[1];
     if(mode == "info"){
         libConfig::Bundle b;
-        b.initialize(false);
+        if(!b.initialize(false)){
+            return EXIT_FAILURE;
+        }
         std::cout << "Active bundles: " << str(b.getActiveBundleNames()) << std::endl;
         std::cout << "Available bundles: " << std::endl;
         for(const libConfig::SingleBundle& sb : b.getAvailableBundles())
@@ -66,21 +68,27 @@ int handle_request(int argc, char** argv)
     else if(mode == "selected")
     {
         libConfig::Bundle b;
-        b.initialize(false);
+        if(!b.initialize(false)){
+            return EXIT_FAILURE;
+        }
         std::cout << b.getActiveBundles()[0].name << std::endl;
         return EXIT_SUCCESS;
     }
     else if(mode == "selectedpath")
     {
         libConfig::Bundle b;
-        b.initialize(false);
+        if(!b.initialize(false)){
+            return EXIT_FAILURE;
+        }
         std::cout << b.getActiveBundles()[0].path << std::endl;
         return EXIT_SUCCESS;
     }
     else if(mode == "active")
     {
         libConfig::Bundle b;
-        b.initialize(false);
+        if(!b.initialize(false)){
+            return EXIT_FAILURE;
+        }
         for (const libConfig::SingleBundle& sb : b.getActiveBundles()){
             std::cout << sb.name << std::endl;
         }
@@ -93,7 +101,9 @@ int handle_request(int argc, char** argv)
             return EXIT_FAILURE;
         }
         libConfig::Bundle b;
-        b.initialize(false);
+        if(!b.initialize(false)){
+            return EXIT_FAILURE;
+        }
         std::vector<std::string> res = b.findFilesByName(argv[2]);
         for(const std::string& p : res){
             std::cout << p << std::endl;
@@ -106,7 +116,9 @@ int handle_request(int argc, char** argv)
             return EXIT_FAILURE;
         }
         libConfig::Bundle b;
-        b.initialize(false);
+        if(!b.initialize(false)){
+            return EXIT_FAILURE;
+        }
         std::cout << b.findFileByName(argv[2]) << std::endl;
     }
     else if(mode == "findext")
@@ -131,10 +143,15 @@ int handle_request(int argc, char** argv)
             return EXIT_FAILURE;
         }
         libConfig::Bundle b;
-        b.initialize(false);
-        std::vector<std::string> res = b.findFilesByExtension(rel_path, ext);
-        for(const std::string& p : res){
-            std::cout << p << std::endl;
+        if(!b.initialize(false))
+        {
+            return EXIT_FAILURE;
+        }
+        else{
+            std::vector<std::string> res = b.findFilesByExtension(rel_path, ext);
+            for(const std::string& p : res){
+                std::cout << p << std::endl;
+            }
         }
     }
     else
