@@ -102,7 +102,7 @@ SingleBundle SingleBundle::fromNameAndSearchPaths(
         }
 
         std::stringstream ss;
-        ss << "Could not determine path of bundle " << name << ". Looked " <<
+        ss << "Could not determine path of bundle '" << name << "'. Looked " <<
               "into the following search paths: " << searchPathsString;
         throw(std::runtime_error(ss.str()));
     }
@@ -363,8 +363,13 @@ bool Bundle::initialize(bool loadTaskConfigs)
     }else
     {
         //ROCK_BUNDLE contains bundle name
-        bundle = SingleBundle::fromNameAndSearchPaths(activeBundle,
-                                                      bundleSearchPaths());
+        try{
+            bundle = SingleBundle::fromNameAndSearchPaths(activeBundle,
+                                                          bundleSearchPaths());
+        }catch(std::runtime_error& err){
+            LOG_ERROR_S << err.what();
+            return false;
+        }
     }
     LOG_INFO_S << "Currently selected bundle: "<<bundle.name << " at " <<
                  bundle.path;
