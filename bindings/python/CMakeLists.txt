@@ -22,7 +22,7 @@ INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS} ${yaml-cpp_PKGC
 
 PYTHON_ADD_MODULE(bundle bundle.cpp)
 set_target_properties(bundle PROPERTIES PREFIX "")
-target_link_libraries(bundle PUBLIC
+target_link_libraries(bundle
     ${Boost_LIBRARIES}
     lib_config
     ${PYTHON_LIBRARIES}
