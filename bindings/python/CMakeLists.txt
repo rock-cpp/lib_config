@@ -18,8 +18,7 @@ message(STATUS "PYTHON_INCLUDE_DIRS = ${PYTHON_INCLUDE_DIRS}")
 message(STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}")
 message(STATUS "PYTHON_INSTALL_PATH = ${PYTHON_INSTALL_PATH}")
 
-
-INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS} ${yaml-cpp_PKGCONFIG_INCLUDE_DIRS})
 
 PYTHON_ADD_MODULE(bundle bundle.cpp)
 set_target_properties(bundle PROPERTIES PREFIX "")
@@ -27,6 +26,7 @@ target_link_libraries(bundle
     ${Boost_LIBRARIES}
     lib_config
     ${PYTHON_LIBRARIES}
+    ${yaml-cpp_PKGCONFIG_LIBRARIES}
 )
 
 add_custom_target(rockpy
