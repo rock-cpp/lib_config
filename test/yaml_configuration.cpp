@@ -65,3 +65,21 @@ BOOST_AUTO_TEST_CASE(get_value)
     BOOST_CHECK_EQUAL(cval->getValues().size(), 2);
 
 }
+
+BOOST_AUTO_TEST_CASE(string_variable_insertions)
+{
+    std::string res;
+    std::string exp;
+    putenv("AUTOPROJ_CURRENT_ROOT=/abs/path");
+    res = libConfig::YAMLConfigParser::applyStringVariableInsertions("<%= #{ENV['AUTOPROJ_CURRENT_ROOT']}/models/robots/coyote3/urdf/coyote3.urdf %>");
+    exp = "/abs/path/models/robots/coyote3/urdf/coyote3.urdf";
+    BOOST_CHECK_EQUAL(res, exp);
+
+    //res = libConfig::YAMLConfigParser::applyStringVariableInsertions("<%= \"#{ENV[''AUTOPROJ_CURRENT_ROOT'']}/models/robots/coyote3/urdf/coyote3.urdf\" %>");
+    //exp = "/abs/path/myfile.txt";
+    //BOOST_CHECK_EQUAL(res, exp);
+
+    //res = libConfig::YAMLConfigParser::applyStringVariableInsertions("<%= \"#{ENV['AUTOPROJ_CURRENT_ROOT']}/models/robots/coyote3/urdf/coyote3.urdf\" %>");
+    //exp = "/abs/path/models/robots/coyote3/urdf/coyote3.urdf";
+    //BOOST_CHECK_EQUAL(res, exp);
+}

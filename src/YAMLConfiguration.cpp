@@ -312,13 +312,13 @@ std::string YAMLConfigParser::applyStringVariableInsertions(const std::string& v
     std::string retVal;
     std::vector<std::string> items;
     
-    boost::regex outerRegex("<%=?\\s*(.*?)\\s*%?>");
-    
+
     //Note, this needs to be defined outside of the lambdas for regex_replace
     //if this is not the case a reference to a stack varaiable is returned, 
     //resulting in a segfault
     std::string ret;
     
+    // lambda function for inner mathcing
     auto innerReplace = [&](const boost::smatch &innerMatch) {
         if(!innerMatch[3].str().empty() || !innerMatch[4].str().empty() )
         {
@@ -362,6 +362,10 @@ std::string YAMLConfigParser::applyStringVariableInsertions(const std::string& v
         throw std::runtime_error("Could not evaluate statement: " + innerMatch[0]);
     };
     
+    // Detects <%= PASSED_TO_INNER_DETECTION %>
+    // e.g.
+    // <%= "#{ENV['AUTOPROJ_CURRENT_ROOT']}/models/robots/coyote3/urdf/coyote3.urdf" %>
+    boost::regex outerRegex("<%=?\\s*(.*?)\\s*%?>");
     retVal = boost::regex_replace(val, outerRegex, [&](const boost::smatch &match) {
         if(match.size() <= 1)
             throw std::runtime_error("Empty <% > sequence");
